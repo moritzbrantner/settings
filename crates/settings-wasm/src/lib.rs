@@ -1,19 +1,21 @@
-//! Narrow WebAssembly transport for `settings-core`.
+//! Narrow WebAssembly transport for `settings-core` and presentation metadata.
 //!
 //! The browser boundary intentionally transports JSON strings. Validation,
-//! defaulting, scope ownership, persistence, and migration remain implemented
-//! by `settings-core`; web consumers do not get a second settings engine.
+//! defaulting, scope ownership, persistence, migration, and presentation ordering remain
+//! implemented in Rust; web consumers do not get a second settings engine.
 
 use settings_core::{
     PreservedEntries, SettingDefinition, SettingId, SettingScope, SettingValue, SettingsRegistry,
     SettingsState, export_scope_json, import_scope_json,
 };
+use settings_presentation::{PresentationEntry, PresentationRegistry};
 use std::collections::BTreeMap;
 use wasm_bindgen::prelude::*;
 
 #[wasm_bindgen]
 pub struct SettingsSession {
     registry: SettingsRegistry,
+    presentation: PresentationRegistry,
     scope_states: BTreeMap<SettingScope, SettingsState>,
     preserved_entries: BTreeMap<SettingScope, PreservedEntries>,
 }
@@ -31,9 +33,24 @@ impl SettingsSession {
 
         Ok(Self {
             registry,
+            presentation: PresentationRegistry::new(),
             scope_states: BTreeMap::new(),
             preserved_entries: BTreeMap::new(),
         })
+    }
+
+    /// Validate and replace the presentation metadata associated with this session.
+    pub fn load_presentation_json(&mut self, presentation_json: &str) -> Result<(), JsValue> {
+        let entries: Vec<PresentationEntry> =
+            serde_json::from_str(presentation_json).map_err(js_error)?;
+        self.presentation =
+            PresentationRegistry::from_entries(&self.registry, entries).map_err(js_error)?;
+        Ok(())
+    }
+
+    /// Return presentation entries in the canonical Rust-defined order.
+    pub fn presentation_json(&self) -> Result<String, JsValue> {
+        serde_json::to_string(&self.presentation.ordered_entries()).map_err(js_error)
     }
 
     /// Return every effective value keyed by stable setting id.
