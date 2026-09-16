@@ -149,7 +149,7 @@ fn persistence_round_trip_is_canonical_and_delta_only() {
         .set(&registry, &id("video.fullscreen"), SettingValue::Bool(true))
         .unwrap();
 
-    let encoded = encode_json(&state).unwrap();
+    let encoded = encode_json(&registry, &state).unwrap();
     assert!(encoded.contains(&format!("\"schema_version\": {CURRENT_SCHEMA_VERSION}")));
     assert!(encoded.contains("video.fullscreen"));
     assert!(!encoded.contains("audio.master_volume"));
@@ -157,7 +157,7 @@ fn persistence_round_trip_is_canonical_and_delta_only() {
     let loaded = decode_json(&registry, &encoded).unwrap();
     assert!(loaded.diagnostics.is_empty());
     assert_eq!(loaded.state, state);
-    assert_eq!(encode_json(&loaded.state).unwrap(), encoded);
+    assert_eq!(encode_json(&registry, &loaded.state).unwrap(), encoded);
 }
 
 #[test]
@@ -232,5 +232,93 @@ fn non_finite_numbers_are_rejected() {
                 SettingValue::Number(f64::NAN),
             )
             .is_err()
+    );
+}
+
+#[test]
+fn deserialization_preserves_setting_id_invariants() {
+    assert!(serde_json::from_str::<SettingId>(r#"""#).is_err());
+    assert!(serde_json::from_str::<SettingId>(r#"" video.fullscreen ""#).is_err());
+    assert_eq!(
+        serde_json::from_str::<SettingId>(r#""video.fullscreen""#).unwrap(),
+        id("video.fullscreen")
+    );
+}
+
+#[test]
+fn effective_values_fail_closed_against_a_changed_registry() {
+    let original = registry();
+    let setting = id("video.fullscreen");
+    let mut state = SettingsState::new();
+    state
+        .set(&original, &setting, SettingValue::Bool(true))
+        .unwrap();
+
+    let mut changed = SettingsRegistry::new();
+    changed
+        .register(SettingDefinition {
+            id: setting.clone(),
+            kind: SettingKind::Integer { min: 0, max: 10 },
+            default: SettingValue::Integer(3),
+            scope: SettingScope::Device,
+            apply_mode: ApplyMode::Apply,
+        })
+        .unwrap();
+
+    assert_eq!(
+        state.effective_value(&changed, &setting),
+        Some(&SettingValue::Integer(3))
+    );
+    assert_eq!(
+        state.effective_value(&SettingsRegistry::new(), &setting),
+        None
+    );
+}
+
+#[test]
+fn session_overrides_are_never_persisted_or_restored() {
+    let mut registry = SettingsRegistry::new();
+    registry
+        .register(SettingDefinition {
+            id: id("session.debug_overlay"),
+            kind: SettingKind::Bool,
+            default: SettingValue::Bool(false),
+            scope: SettingScope::Session,
+            apply_mode: ApplyMode::Immediate,
+        })
+        .unwrap();
+
+    let mut state = SettingsState::new();
+    state
+        .set(
+            &registry,
+            &id("session.debug_overlay"),
+            SettingValue::Bool(true),
+        )
+        .unwrap();
+
+    let encoded = encode_json(&registry, &state).unwrap();
+    assert!(!encoded.contains("session.debug_overlay"));
+
+    let json = r#"{
+  "schema_version": 1,
+  "overrides": {
+    "session.debug_overlay": { "type": "bool", "value": true }
+  }
+}"#;
+    let loaded = decode_json(&registry, json).unwrap();
+    assert_eq!(loaded.diagnostics.len(), 1);
+    assert!(matches!(
+        loaded.diagnostics[0],
+        LoadDiagnostic::NonPersistentScope {
+            scope: SettingScope::Session,
+            ..
+        }
+    ));
+    assert_eq!(
+        loaded
+            .state
+            .effective_value(&registry, &id("session.debug_overlay")),
+        Some(&SettingValue::Bool(false))
     );
 }
