@@ -1,5 +1,10 @@
 [workspace]
-members = ["crates/settings-core", "crates/settings-wasm", "crates/settings-adapters"]
+members = [
+    "crates/settings-core",
+    "crates/settings-wasm",
+    "crates/settings-adapters",
+    "crates/settings-accessibility",
+]
 resolver = "2"
 
 [workspace.package]
