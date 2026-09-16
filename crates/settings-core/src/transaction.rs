@@ -175,11 +175,7 @@ impl TimedSafetyRollback {
         true
     }
 
-    pub fn rollback_plan(
-        &self,
-        registry: &SettingsRegistry,
-        now_tick: u64,
-    ) -> Vec<SettingChange> {
+    pub fn rollback_plan(&self, registry: &SettingsRegistry, now_tick: u64) -> Vec<SettingChange> {
         if self.status(now_tick) == SafetyRollbackStatus::Expired {
             diff(registry, &self.candidate, &self.baseline)
         } else {
