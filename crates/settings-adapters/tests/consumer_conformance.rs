@@ -61,9 +61,11 @@ fn assert_consumer_conformance<A>(
         .unwrap();
 
     let unrelated_changes = diff(&registry, &changed, &unrelated_changed);
-    assert!(commands_for_changes(adapter, &unrelated_changes)
-        .unwrap()
-        .is_empty());
+    assert!(
+        commands_for_changes(adapter, &unrelated_changes)
+            .unwrap()
+            .is_empty()
+    );
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
