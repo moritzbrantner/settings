@@ -1,0 +1,14 @@
+[package]
+name = "settings-adapters"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Thin domain adapter contracts for settings consumers"
+
+[dependencies]
+serde.workspace = true
+settings-core = { path = "../settings-core" }
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
