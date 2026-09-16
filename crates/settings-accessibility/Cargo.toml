@@ -9,3 +9,6 @@ description = "Cross-cutting accessibility semantics for the settings foundation
 serde.workspace = true
 settings-core = { path = "../settings-core" }
 thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
