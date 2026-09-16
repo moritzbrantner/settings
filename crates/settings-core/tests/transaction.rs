@@ -131,7 +131,7 @@ fn cancel_returns_only_immediate_reverts_and_restores_the_baseline() {
         .stage_set(&registry, &id("video.fullscreen"), SettingValue::Bool(true))
         .unwrap();
 
-    let preview = transaction.immediate_preview_changes(&registry);
+    let preview = transaction.take_immediate_preview_changes(&registry);
     assert_eq!(preview.len(), 1);
     assert_eq!(preview[0].id, id("audio.master_volume"));
     assert_eq!(preview[0].before, SettingValue::Integer(80));
