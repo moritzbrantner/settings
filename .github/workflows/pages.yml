@@ -111,7 +111,7 @@ jobs:
               definition={definition}
               presentation={presentation}
               value={value}
-              translate={(key) => key}
+              localize={(key) => key}
               onValueChange={() => undefined}
             />
           );
