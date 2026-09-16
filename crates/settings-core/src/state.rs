@@ -125,9 +125,7 @@ impl SettingsState {
     pub fn clear_transient_override(&mut self, id: &SettingId, source: OverrideSource) -> bool {
         match source {
             OverrideSource::Policy => self.policy_overrides.remove(id).is_some(),
-            OverrideSource::CommandLineOverride => {
-                self.command_line_overrides.remove(id).is_some()
-            }
+            OverrideSource::CommandLineOverride => self.command_line_overrides.remove(id).is_some(),
             OverrideSource::SessionOverride => self.session_overrides.remove(id).is_some(),
             OverrideSource::UserOverride
             | OverrideSource::Preset
@@ -149,12 +147,7 @@ impl SettingsState {
             )?;
         }
         for (id, value) in &other.session_overrides {
-            self.set_with_source(
-                registry,
-                id,
-                value.clone(),
-                OverrideSource::SessionOverride,
-            )?;
+            self.set_with_source(registry, id, value.clone(), OverrideSource::SessionOverride)?;
         }
         for (id, value) in &other.command_line_overrides {
             self.set_with_source(
