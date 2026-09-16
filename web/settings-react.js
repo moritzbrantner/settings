@@ -1,11 +1,11 @@
-import React from 'react';
+import { createElement } from 'react';
 import { ToggleSetting } from '@moritzbrantner/ui/stable';
 
 export function SettingsBooleanField({
   definition,
   presentation,
   value,
-  translate,
+  localize,
   onValueChange,
   disabled = false,
   detail,
@@ -17,11 +17,11 @@ export function SettingsBooleanField({
   assertBooleanBinding(definition, presentation, value);
 
   const metadata = presentation.metadata;
-  return React.createElement(ToggleSetting, {
+  return createElement(ToggleSetting, {
     id: id ?? `setting-${definition.id.replaceAll('.', '-')}`,
-    title: translate(metadata.label_key),
+    title: localize(metadata.label_key),
     description: metadata.description_key
-      ? translate(metadata.description_key)
+      ? localize(metadata.description_key)
       : undefined,
     detail,
     checked: value.value,
