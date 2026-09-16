@@ -47,9 +47,11 @@ impl SettingsState {
         registry: &'a SettingsRegistry,
         id: &SettingId,
     ) -> Option<&'a SettingValue> {
-        self.overrides
-            .get(id)
-            .or_else(|| registry.get(id).map(|definition| &definition.default))
+        let definition = registry.get(id)?;
+        match self.overrides.get(id) {
+            Some(value) if definition.validate_value(value).is_ok() => Some(value),
+            _ => Some(&definition.default),
+        }
     }
 
     pub fn override_value(&self, id: &SettingId) -> Option<&SettingValue> {
