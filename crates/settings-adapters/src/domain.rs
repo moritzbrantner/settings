@@ -1,5 +1,6 @@
 use settings_core::{
-    CapabilityFacts, CapabilityId, RegistryError, SettingChange, SettingDefinition, SettingsRegistry,
+    CapabilityFacts, CapabilityId, RegistryError, SettingChange, SettingDefinition,
+    SettingsRegistry,
 };
 use thiserror::Error;
 
