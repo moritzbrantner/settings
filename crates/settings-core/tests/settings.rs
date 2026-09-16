@@ -157,7 +157,7 @@ fn scoped_persistence_round_trip_is_canonical_and_delta_only() {
         &registry,
         &state,
         SettingScope::Device,
-        &PreservedEntries::new(),
+        &PreservedEntries::new(SettingScope::Device).unwrap(),
     )
     .unwrap();
     assert!(encoded.contains(&format!("\"schema_version\": {CURRENT_SCHEMA_VERSION}")));
@@ -208,6 +208,7 @@ fn compatible_scope_files_recover_valid_entries_and_preserve_unknown_ones() {
             .iter()
             .any(|diagnostic| matches!(diagnostic, LoadDiagnostic::InvalidValue { .. }))
     );
+    assert_eq!(loaded.preserved_entries.scope(), SettingScope::Device);
     assert_eq!(loaded.preserved_entries.len(), 1);
     assert_eq!(
         loaded
@@ -305,7 +306,7 @@ fn effective_values_fail_closed_against_a_changed_registry() {
 }
 
 #[test]
-fn provenance_tracks_defaults_and_override_sources() {
+fn provenance_tracks_layered_override_sources_without_destroying_durable_state() {
     let registry = registry();
     let setting = id("audio.master_volume");
     let mut state = SettingsState::new();
@@ -334,10 +335,19 @@ fn provenance_tracks_defaults_and_override_sources() {
         state.effective_provenance(&registry, &setting),
         Some(ValueProvenance::Policy)
     );
+    assert_eq!(state.override_value(&setting), Some(&SettingValue::Integer(65)));
+    assert_eq!(state.transient_override_count(), 1);
 
     state
         .set(&registry, &setting, SettingValue::Integer(80))
         .unwrap();
+    assert_eq!(state.override_value(&setting), None);
+    assert_eq!(
+        state.effective_provenance(&registry, &setting),
+        Some(ValueProvenance::Policy)
+    );
+
+    assert!(state.clear_transient_override(&setting, OverrideSource::Policy));
     assert_eq!(
         state.effective_provenance(&registry, &setting),
         Some(ValueProvenance::Default)
@@ -345,36 +355,8 @@ fn provenance_tracks_defaults_and_override_sources() {
 }
 
 #[test]
-fn session_scope_cannot_be_exported() {
-    let mut registry = SettingsRegistry::new();
-    registry
-        .register(SettingDefinition {
-            id: id("session.debug_overlay"),
-            kind: SettingKind::Bool,
-            default: SettingValue::Bool(false),
-            scope: SettingScope::Session,
-            apply_mode: ApplyMode::Immediate,
-            availability: None,
-        })
-        .unwrap();
-
-    let mut state = SettingsState::new();
-    state
-        .set_with_source(
-            &registry,
-            &id("session.debug_overlay"),
-            SettingValue::Bool(true),
-            OverrideSource::SessionOverride,
-        )
-        .unwrap();
-
-    let error = export_scope_json(
-        &registry,
-        &state,
-        SettingScope::Session,
-        &PreservedEntries::new(),
-    )
-    .unwrap_err();
+fn session_scope_cannot_construct_preserved_entries() {
+    let error = PreservedEntries::new(SettingScope::Session).unwrap_err();
     assert!(matches!(
         error,
         PersistenceError::NonPersistentScope(SettingScope::Session)
