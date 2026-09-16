@@ -78,7 +78,8 @@ jobs:
       - name: Typecheck React UI consumer contract
         run: |
           npm install --no-save --package-lock=false --ignore-scripts \
-            typescript@5.9.3 react@19.2.0 @types/react@19.2.2 @moritzbrantner/ui@1.1.0
+            typescript@5.9.3 react@19.2.0 react-dom@19.2.0 \
+            @types/react@19.2.2 @types/react-dom@19.2.2 @moritzbrantner/ui@1.1.0
           mkdir -p target/react-contract
           cat > target/react-contract/contract.tsx <<'TSX'
           import { SettingsBooleanField } from '../../dist/settings-react.js';
