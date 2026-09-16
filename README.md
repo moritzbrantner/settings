@@ -19,6 +19,7 @@ Reusable user-facing settings foundation for games, editors, and applications.
 - cross-cutting accessibility tags, bootstrap metadata, and preset-impact explanations;
 - deterministic presentation metadata using localization keys, category/group/order, search keys, and discoverability;
 - a validated WASM/browser boundary with TypeScript declarations and a shared Rust/web fixture;
+- an optional React presentation bridge backed by `@moritzbrantner/ui` stable primitives;
 - a reference settings UI that consumes Rust-validated presentation metadata while keeping state in the settings session;
 - property, compatibility, consumer-conformance, fuzz-build, benchmark-build, and allocation-evidence hardening in CI;
 - Rust tests, formatting, clippy, documentation checks, and browser-distribution validation in CI.
@@ -37,6 +38,14 @@ bun add @moritzbrantner/settings-browser@github:moritzbrantner/settings#<browser
 
 That keeps application builds content-addressed while allowing an intentional dependency update when a newer settings foundation is accepted.
 
+### React UI bridge
+
+Consumers that already use `@moritzbrantner/ui` may import `@moritzbrantner/settings-browser/react`. This optional layer maps validated settings presentation metadata to shared UI primitives without moving React or UI behavior into `settings-core`.
+
+The first supported control is `SettingsBooleanField`, which maps a boolean definition/value plus presentation localization keys to the stable `ToggleSetting` primitive. The consumer still owns translation, current state, persistence lifecycle, and the domain behavior triggered by a setting change. Unsupported setting kinds require an explicit consumer renderer until a shared mapping is added and dogfooded.
+
+`react` and `@moritzbrantner/ui` are optional peer dependencies so browser-only consumers of the core WASM adapter do not pull in the UI stack.
+
 ## Workspace
 
 ```text
@@ -45,7 +54,7 @@ crates/settings-adapters       Thin domain composition contracts
 crates/settings-accessibility  Cross-cutting accessibility semantics
 crates/settings-presentation   Localization-keyed presentation metadata
 crates/settings-wasm           Browser/WASM distribution boundary
-web/                           Typed browser API and reference UI
+web/                           Typed browser API, optional React bridge, and reference UI
 fixtures/                      Cross-boundary deterministic fixtures
 benchmarks/                    Isolated Criterion workloads and allocation evidence
 fuzz/                          Isolated cargo-fuzz targets
