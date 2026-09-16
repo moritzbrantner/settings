@@ -157,8 +157,8 @@ impl DomainSettingsAdapter for GraphicsAdapter {
         if change.id.as_str() != "video.hdr" {
             return Ok(None);
         }
-        match change.after {
-            SettingValue::Bool(value) => Ok(Some(RendererCommand::SetHdr(value))),
+        match &change.after {
+            SettingValue::Bool(value) => Ok(Some(RendererCommand::SetHdr(*value))),
             _ => unreachable!("registered video.hdr is always boolean"),
         }
     }
@@ -195,8 +195,8 @@ impl DomainSettingsAdapter for AudioAdapter {
         if change.id.as_str() != "audio.master_volume" {
             return Ok(None);
         }
-        match change.after {
-            SettingValue::Integer(value) => Ok(Some(MixerCommand::SetMasterVolume(value))),
+        match &change.after {
+            SettingValue::Integer(value) => Ok(Some(MixerCommand::SetMasterVolume(*value))),
             _ => unreachable!("registered master volume is always integer"),
         }
     }
@@ -233,8 +233,8 @@ impl DomainSettingsAdapter for GameAdapter {
         if change.id.as_str() != "game.auto_pause" {
             return Ok(None);
         }
-        match change.after {
-            SettingValue::Bool(value) => Ok(Some(GameCommand::SetAutoPause(value))),
+        match &change.after {
+            SettingValue::Bool(value) => Ok(Some(GameCommand::SetAutoPause(*value))),
             _ => unreachable!("registered game.auto_pause is always boolean"),
         }
     }
