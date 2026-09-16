@@ -17,6 +17,7 @@ fn registry() -> SettingsRegistry {
             default: SettingValue::Integer(80),
             scope: SettingScope::User,
             apply_mode: ApplyMode::Immediate,
+            availability: None,
         })
         .unwrap();
     registry
@@ -26,6 +27,7 @@ fn registry() -> SettingsRegistry {
             default: SettingValue::Bool(false),
             scope: SettingScope::Device,
             apply_mode: ApplyMode::Apply,
+            availability: None,
         })
         .unwrap();
     registry
@@ -37,6 +39,7 @@ fn registry() -> SettingsRegistry {
             default: SettingValue::Choice("high".into()),
             scope: SettingScope::Device,
             apply_mode: ApplyMode::Restart,
+            availability: None,
         })
         .unwrap();
     registry
@@ -220,6 +223,7 @@ fn non_finite_numbers_are_rejected() {
             default: SettingValue::Number(1.0),
             scope: SettingScope::User,
             apply_mode: ApplyMode::Immediate,
+            availability: None,
         })
         .unwrap();
 
@@ -262,6 +266,7 @@ fn effective_values_fail_closed_against_a_changed_registry() {
             default: SettingValue::Integer(3),
             scope: SettingScope::Device,
             apply_mode: ApplyMode::Apply,
+            availability: None,
         })
         .unwrap();
 
@@ -285,6 +290,7 @@ fn session_overrides_are_never_persisted_or_restored() {
             default: SettingValue::Bool(false),
             scope: SettingScope::Session,
             apply_mode: ApplyMode::Immediate,
+            availability: None,
         })
         .unwrap();
 

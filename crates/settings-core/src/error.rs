@@ -9,6 +9,14 @@ pub enum SettingIdError {
     SurroundingWhitespace(String),
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Error)]
+pub enum CapabilityIdError {
+    #[error("capability id cannot be empty")]
+    Empty,
+    #[error("capability id `{0}` contains leading or trailing whitespace")]
+    SurroundingWhitespace(String),
+}
+
 #[derive(Clone, Debug, PartialEq, Error)]
 pub enum RegistryError {
     #[error("duplicate setting id `{0}`")]

@@ -1,3 +1,4 @@
+use crate::availability::AvailabilityPolicy;
 use crate::{RegistryError, SettingIdError, ValidationError};
 use serde::de::Error as _;
 use serde::{Deserialize, Deserializer, Serialize};
@@ -86,6 +87,8 @@ pub struct SettingDefinition {
     pub default: SettingValue,
     pub scope: SettingScope,
     pub apply_mode: ApplyMode,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub availability: Option<AvailabilityPolicy>,
 }
 
 impl SettingDefinition {
@@ -130,6 +133,15 @@ impl SettingDefinition {
                 }
             }
             _ => {}
+        }
+
+        if let Some(policy) = &self.availability {
+            policy.condition.validate_structure().map_err(|reason| {
+                RegistryError::InvalidDefinition {
+                    id: self.id.clone(),
+                    reason,
+                }
+            })?;
         }
 
         self.validate_value(&self.default)?;

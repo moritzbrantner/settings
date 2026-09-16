@@ -26,14 +26,16 @@ Acceptance boundary: two different consumers can declare independent settings, m
 
 Make availability a first-class evaluated result rather than UI ad-hoc logic.
 
-- [ ] Opaque capability facts supplied by consumers/platform adapters.
-- [ ] Availability rules (`all`, `any`, `not`, capability/value predicates).
-- [ ] Dependency rules between settings without callbacks inside definitions.
-- [ ] Explainable disabled/hidden reasons for UI consumption.
-- [ ] Conservative evaluation when referenced facts/settings are missing.
-- [ ] Cycle detection for setting-to-setting dependency graphs.
+- [x] Opaque capability facts supplied by consumers/platform adapters.
+- [x] Availability rules (`all`, `any`, `not`, capability/value predicates).
+- [x] Dependency rules between settings without callbacks inside definitions.
+- [x] Explainable disabled/hidden reasons for UI consumption.
+- [x] Conservative evaluation when referenced facts/settings are missing.
+- [x] Cycle detection for setting-to-setting dependency graphs.
 
 Example target: HDR is exposed only when the renderer reports HDR support; manual render scale can become unavailable while a mutually exclusive upscaler mode is active.
+
+Acceptance boundary: capability names remain opaque to the core; a renderer can explicitly report HDR support, setting values can declaratively gate other settings, missing evidence remains unknown rather than being guessed, and cyclic setting dependencies are reported deterministically independent of registration order.
 
 ## Slice 2 — Persistence, migration, and provenance
 
