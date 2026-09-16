@@ -1,0 +1,22 @@
+[package]
+name = "settings-benchmarks"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[dependencies]
+criterion = "0.8"
+serde_json = "1"
+settings-core = { path = "../crates/settings-core" }
+settings-presentation = { path = "../crates/settings-presentation" }
+
+[[bench]]
+name = "settings"
+harness = false
+
+[[bin]]
+name = "allocation-evidence"
+path = "src/bin/allocation_evidence.rs"
+
+[workspace]
+members = ["."]
