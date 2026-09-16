@@ -54,7 +54,10 @@ pub struct SettingOverride {
 
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct SettingsState {
-    overrides: BTreeMap<SettingId, SettingOverride>,
+    durable_overrides: BTreeMap<SettingId, SettingOverride>,
+    policy_overrides: BTreeMap<SettingId, SettingValue>,
+    command_line_overrides: BTreeMap<SettingId, SettingValue>,
+    session_overrides: BTreeMap<SettingId, SettingValue>,
 }
 
 impl SettingsState {
@@ -83,11 +86,26 @@ impl SettingsState {
             .ok_or_else(|| ValidationError::UnknownSetting(id.clone()))?;
         definition.validate_value(&value)?;
 
-        if value == definition.default {
-            self.overrides.remove(id);
-        } else {
-            self.overrides
-                .insert(id.clone(), SettingOverride { value, source });
+        match source {
+            OverrideSource::UserOverride
+            | OverrideSource::Preset
+            | OverrideSource::Migration { .. } => {
+                if value == definition.default {
+                    self.durable_overrides.remove(id);
+                } else {
+                    self.durable_overrides
+                        .insert(id.clone(), SettingOverride { value, source });
+                }
+            }
+            OverrideSource::Policy => {
+                self.policy_overrides.insert(id.clone(), value);
+            }
+            OverrideSource::CommandLineOverride => {
+                self.command_line_overrides.insert(id.clone(), value);
+            }
+            OverrideSource::SessionOverride => {
+                self.session_overrides.insert(id.clone(), value);
+            }
         }
         Ok(())
     }
@@ -100,8 +118,21 @@ impl SettingsState {
         if registry.get(id).is_none() {
             return Err(ValidationError::UnknownSetting(id.clone()));
         }
-        self.overrides.remove(id);
+        self.durable_overrides.remove(id);
         Ok(())
+    }
+
+    pub fn clear_transient_override(&mut self, id: &SettingId, source: OverrideSource) -> bool {
+        match source {
+            OverrideSource::Policy => self.policy_overrides.remove(id).is_some(),
+            OverrideSource::CommandLineOverride => {
+                self.command_line_overrides.remove(id).is_some()
+            }
+            OverrideSource::SessionOverride => self.session_overrides.remove(id).is_some(),
+            OverrideSource::UserOverride
+            | OverrideSource::Preset
+            | OverrideSource::Migration { .. } => false,
+        }
     }
 
     pub fn merge_from(
@@ -109,13 +140,32 @@ impl SettingsState {
         registry: &SettingsRegistry,
         other: &SettingsState,
     ) -> Result<(), ValidationError> {
-        for (id, setting_override) in &other.overrides {
+        for (id, setting_override) in &other.durable_overrides {
             self.set_with_source(
                 registry,
                 id,
                 setting_override.value.clone(),
                 setting_override.source.clone(),
             )?;
+        }
+        for (id, value) in &other.session_overrides {
+            self.set_with_source(
+                registry,
+                id,
+                value.clone(),
+                OverrideSource::SessionOverride,
+            )?;
+        }
+        for (id, value) in &other.command_line_overrides {
+            self.set_with_source(
+                registry,
+                id,
+                value.clone(),
+                OverrideSource::CommandLineOverride,
+            )?;
+        }
+        for (id, value) in &other.policy_overrides {
+            self.set_with_source(registry, id, value.clone(), OverrideSource::Policy)?;
         }
         Ok(())
     }
@@ -126,7 +176,16 @@ impl SettingsState {
         id: &SettingId,
     ) -> Option<&'a SettingValue> {
         let definition = registry.get(id)?;
-        match self.overrides.get(id) {
+        if let Some(value) = valid_transient(&self.policy_overrides, definition, id) {
+            return Some(value);
+        }
+        if let Some(value) = valid_transient(&self.command_line_overrides, definition, id) {
+            return Some(value);
+        }
+        if let Some(value) = valid_transient(&self.session_overrides, definition, id) {
+            return Some(value);
+        }
+        match self.durable_overrides.get(id) {
             Some(setting_override)
                 if definition.validate_value(&setting_override.value).is_ok() =>
             {
@@ -142,7 +201,16 @@ impl SettingsState {
         id: &SettingId,
     ) -> Option<ValueProvenance> {
         let definition = registry.get(id)?;
-        match self.overrides.get(id) {
+        if valid_transient(&self.policy_overrides, definition, id).is_some() {
+            return Some(ValueProvenance::Policy);
+        }
+        if valid_transient(&self.command_line_overrides, definition, id).is_some() {
+            return Some(ValueProvenance::CommandLineOverride);
+        }
+        if valid_transient(&self.session_overrides, definition, id).is_some() {
+            return Some(ValueProvenance::SessionOverride);
+        }
+        match self.durable_overrides.get(id) {
             Some(setting_override)
                 if definition.validate_value(&setting_override.value).is_ok() =>
             {
@@ -153,30 +221,46 @@ impl SettingsState {
     }
 
     pub fn override_value(&self, id: &SettingId) -> Option<&SettingValue> {
-        self.overrides
+        self.durable_overrides
             .get(id)
             .map(|setting_override| &setting_override.value)
     }
 
     pub fn override_source(&self, id: &SettingId) -> Option<&OverrideSource> {
-        self.overrides
+        self.durable_overrides
             .get(id)
             .map(|setting_override| &setting_override.source)
     }
 
     pub fn overrides(&self) -> impl Iterator<Item = (&SettingId, &SettingValue)> {
-        self.overrides
+        self.durable_overrides
             .iter()
             .map(|(id, setting_override)| (id, &setting_override.value))
     }
 
     pub fn overrides_with_sources(&self) -> impl Iterator<Item = (&SettingId, &SettingOverride)> {
-        self.overrides.iter()
+        self.durable_overrides.iter()
     }
 
     pub fn override_count(&self) -> usize {
-        self.overrides.len()
+        self.durable_overrides.len()
     }
+
+    pub fn transient_override_count(&self) -> usize {
+        self.policy_overrides.len()
+            + self.command_line_overrides.len()
+            + self.session_overrides.len()
+    }
+}
+
+fn valid_transient<'a>(
+    values: &'a BTreeMap<SettingId, SettingValue>,
+    definition: &crate::SettingDefinition,
+    id: &SettingId,
+) -> Option<&'a SettingValue> {
+    values
+        .get(id)
+        .filter(|value| definition.validate_value(value).is_ok())
 }
 
 #[derive(Clone, Debug, PartialEq)]
