@@ -57,10 +57,7 @@ fn presets_apply_atomically_as_ordinary_values_with_preset_provenance() {
     let mut state = SettingsState::new();
     let mut preset = SettingsPreset::new(PresetId::new("quiet-accessible").unwrap());
     preset.insert(id("audio.master_volume"), SettingValue::Integer(50));
-    preset.insert(
-        id("accessibility.reduce_motion"),
-        SettingValue::Bool(true),
-    );
+    preset.insert(id("accessibility.reduce_motion"), SettingValue::Bool(true));
 
     let changes = apply_preset(&registry, &mut state, &preset).unwrap();
     assert_eq!(changes.len(), 2);
@@ -308,14 +305,8 @@ fn timed_safety_rollback_uses_caller_ticks_and_cannot_resolve_while_pending() {
     assert_eq!(rollback.status(1_000), SafetyRollbackStatus::Expired);
     let plan = rollback.rollback_plan(&registry, 1_000);
     assert_eq!(plan.len(), 1);
-    assert_eq!(
-        plan[0].before,
-        SettingValue::Choice("2560x1440".into())
-    );
-    assert_eq!(
-        plan[0].after,
-        SettingValue::Choice("1920x1080".into())
-    );
+    assert_eq!(plan[0].before, SettingValue::Choice("2560x1440".into()));
+    assert_eq!(plan[0].after, SettingValue::Choice("1920x1080".into()));
     assert_eq!(rollback.resolved_state(1_000), Some(&baseline));
 
     let mut confirmed = TimedSafetyRollback::new(SettingsState::new(), candidate.clone(), 2_000);
