@@ -25,6 +25,18 @@ Reusable user-facing settings foundation for games, editors, and applications.
 
 The core deliberately has no renderer, audio, input, UI-framework, filesystem, or platform dependency. `settings-adapters` never executes domain behavior; it only registers ordinary core definitions/capabilities and translates setting changes into command types owned by consumers. `settings-accessibility` annotates ordinary setting identifiers and analyzes normal presets without taking ownership of captions, narration, camera, input, haptics, audio, or gameplay behavior. `settings-presentation` owns only presentation metadata and deterministic ordering; localized strings and concrete widgets remain consumer-owned.
 
+## Browser consumers
+
+The generated `browser-dist` branch is an installable typed ESM package named `@moritzbrantner/settings-browser`. It contains the canonical browser adapter, declarations, generated WASM JavaScript, and the WASM binary in one self-contained package layout.
+
+Cross-repository consumers should pin an exact `browser-dist` commit rather than execute the mutable branch or Pages URL directly. For example, with Bun:
+
+```bash
+bun add @moritzbrantner/settings-browser@github:moritzbrantner/settings#<browser-dist-commit>
+```
+
+That keeps application builds content-addressed while allowing an intentional dependency update when a newer settings foundation is accepted.
+
 ## Workspace
 
 ```text
