@@ -26,14 +26,23 @@ struct StoredSettingsV2 {
     overrides: BTreeMap<String, Value>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct PreservedEntries {
+    scope: SettingScope,
     entries: BTreeMap<String, Value>,
 }
 
 impl PreservedEntries {
-    pub fn new() -> Self {
-        Self::default()
+    pub fn new(scope: SettingScope) -> Result<Self, PersistenceError> {
+        ensure_persistent_scope(scope)?;
+        Ok(Self {
+            scope,
+            entries: BTreeMap::new(),
+        })
+    }
+
+    pub fn scope(&self) -> SettingScope {
+        self.scope
     }
 
     pub fn len(&self) -> usize {
@@ -98,6 +107,12 @@ pub fn export_scope_json(
     preserved_entries: &PreservedEntries,
 ) -> Result<String, PersistenceError> {
     ensure_persistent_scope(scope)?;
+    if preserved_entries.scope != scope {
+        return Err(PersistenceError::ScopeMismatch {
+            expected: scope,
+            found: preserved_entries.scope,
+        });
+    }
 
     let mut overrides = BTreeMap::new();
     for (raw_id, value) in &preserved_entries.entries {
@@ -168,7 +183,7 @@ pub fn import_scope_json(
         })
         .unwrap_or(OverrideSource::UserOverride);
     let mut state = SettingsState::new();
-    let mut preserved_entries = PreservedEntries::new();
+    let mut preserved_entries = PreservedEntries::new(expected_scope)?;
 
     for (raw_id, raw_value) in stored.overrides {
         let id = match SettingId::new(raw_id.clone()) {
