@@ -2,7 +2,7 @@
 
 ## Authority boundary
 
-`settings-core` is authoritative for generic setting semantics: identity, types, constraints, defaults, scopes, apply modes, overrides, deterministic diffs, declarative availability, and the portable persistence envelope.
+`settings-core` is authoritative for generic setting semantics: identity, types, constraints, defaults, scopes, apply modes, overrides, deterministic diffs, declarative availability, provenance, and the portable persistence envelope.
 
 It is not authoritative for domain behavior.
 
@@ -24,7 +24,7 @@ That means changing a consumer default does not copy or rewrite every user's pro
 
 Registration order is never semantic.
 
-Definitions and overrides use ordered maps, so iteration, diffs, and serialized maps have stable ordering. Diffs are computed over the registry's canonical identifier order. The same registry and override set therefore produce the same effective values and change list.
+Definitions and overrides use ordered maps, so iteration, diffs, dependency diagnostics, and serialized maps have stable ordering. The same registry and override set therefore produce the same effective values, change list, availability result, and canonical persistence representation.
 
 Floating-point setting values must be finite. NaN and infinities are rejected because they do not provide stable equality or portable persistence semantics.
 
@@ -32,7 +32,7 @@ Floating-point setting values must be finite. NaN and infinities are rejected be
 
 A definition declares a value kind and constraints. Registration validates the definition and its default before it becomes visible. Writes validate against the registered definition before mutating state.
 
-Unknown setting identifiers and invalid persisted values are fail-closed: they are not applied. Loading a schema version newer or older than the implemented version is rejected until an explicit migration exists. Known valid values can still be recovered from a version-compatible file when individual stale entries are skipped, with diagnostics returned to the caller.
+Unknown setting identifiers and invalid persisted values are fail-closed: they are not applied. Compatible snapshots recover independently valid entries and return diagnostics for invalid or corrupt entries.
 
 Identifiers retain their validation boundary during deserialization; Serde does not bypass `SettingId` or `CapabilityId` invariants.
 
@@ -45,9 +45,25 @@ The core models four scopes without deciding where they are stored:
 - `Device`: belongs to a physical/logical device installation, such as resolution or output device.
 - `User`: portable user preference, such as subtitle presentation.
 
-Persistence backends and synchronization policies are later adapters. A consumer can therefore map scopes onto local files, browser storage, cloud profiles, save data, or another store without changing setting semantics.
+Schema v2 persists exactly one durable scope per snapshot. This prevents device-local values from being accidentally copied into a cloud-synced user profile and keeps save/document settings independent. `Session` is deliberately not persistable.
 
-`Session` overrides are never serialized or restored by the portable persistence envelope.
+Independently loaded `Save`, `Device`, and `User` states can be merged into one runtime state after each snapshot has been validated against the active registry.
+
+## Provenance
+
+An override carries both its value and source. The core distinguishes:
+
+- user override,
+- preset,
+- migration,
+- policy,
+- command-line override,
+- session override,
+- and the absence of an override, which is reported as the consumer default.
+
+Provenance is queryable separately from the effective value. This lets presentation and support tooling explain why a value is active without changing value semantics.
+
+Only sources that represent durable preference state are eligible for portable persistence. Policy, command-line, and session overrides remain runtime overlays and are deliberately filtered out during export. A migration load records the source schema version so migrated values are distinguishable from values read directly from the current schema.
 
 ## Apply modes
 
@@ -78,15 +94,29 @@ Availability evaluation does not recursively evaluate the availability of refere
 
 Cycle detection runs over the completed ordered registry rather than rejecting forward references during registration. Cyclic strongly connected components are reported in canonical setting-id order, including self-cycles. This keeps registration order non-semantic and lets consumers decide whether a reported cycle is a build-time error, diagnostic, or intentionally tolerated policy.
 
-## Persistence
+## Persistence and migration
 
-The MVP JSON envelope contains a schema version and delta-only overrides. Persistence is deliberately data-oriented: there is no filesystem API in the core crate.
+Persistence is data-oriented: `settings-core` does not own filesystem paths, databases, browser storage, cloud accounts, encryption keys, or synchronization policy.
 
-Encoding receives the active registry so ephemeral session values and stale/invalid overrides cannot leak into durable state. The caller owns where bytes live. Later slices can add migration registries, per-scope snapshots, encryption/sync adapters, and provenance without coupling the canonical model to a storage technology.
+Schema v2 contains a schema version, one explicit durable scope, and an ordered map of delta-only overrides. Import checks that the envelope's scope matches the requested target before applying values.
+
+Schema upgrades run through an explicit migration chain. The current v1-to-v2 migration partitions known legacy entries by consulting the active registry. Unknown v1 entries are dropped with diagnostics because the old mixed-scope envelope provides no trustworthy way to decide whether they belong to `Save`, `Device`, or `User`. Unknown entries in v2 are preserved verbatim because the enclosing v2 scope makes their storage boundary safe. If a later registry starts recognizing one of those identifiers, the known definition takes precedence over the preserved raw entry.
+
+Corruption recovery is entry-oriented for a structurally readable, supported envelope. Bad identifiers, malformed values, invalid known values, and scope mismatches are skipped with diagnostics while independent valid entries are recovered. A malformed envelope or unsupported future schema fails as a whole rather than being guessed.
+
+Import/export uses ordered maps and pretty JSON to provide a deterministic canonical representation. Re-exporting a recovered compatible v2 snapshot therefore stabilizes to the same bytes while retaining safe unknown entries.
+
+## Atomic storage boundary
+
+`AtomicSettingsStorage` represents one concrete storage target and exposes only reading the committed bytes and atomically replacing them.
+
+The core does not implement filesystem writes itself. A conforming storage adapter must ensure that a failed replace never exposes a partially written snapshot. Filesystem adapters should normally write a temporary file, perform the durability barriers appropriate to the platform, and use an atomic rename/replace instead of truncating the live file in place.
+
+This boundary keeps crash-safety responsibilities explicit while allowing local files, browser storage, cloud-backed stores, save containers, or application-specific persistence mechanisms to implement them appropriately.
 
 ## CQS shape
 
-Reads (`get`, effective-value lookup, availability evaluation, iteration, diffing, dependency diagnostics) are separate from mutations (`register`, `set`, `reset`). The crate keeps this lightweight and in-process; it does not introduce messaging, event sourcing, projections, or distributed CQRS infrastructure.
+Reads (`get`, effective-value/provenance lookup, availability evaluation, iteration, diffing, dependency diagnostics, export) are separate from mutations (`register`, `set`, `reset`, merge/import into caller-owned state). The crate keeps this lightweight and in-process; it does not introduce messaging, event sourcing, projections, or distributed CQRS infrastructure.
 
 ## Dependency direction
 
