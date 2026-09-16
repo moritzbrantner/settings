@@ -103,7 +103,9 @@ fn unknown_and_duplicate_metadata_fail_closed() {
         .register(&settings, known.clone(), metadata.clone())
         .unwrap();
     assert_eq!(
-        presentation.register(&settings, known.clone(), metadata).unwrap_err(),
+        presentation
+            .register(&settings, known.clone(), metadata)
+            .unwrap_err(),
         PresentationRegistryError::Duplicate(known)
     );
 }
