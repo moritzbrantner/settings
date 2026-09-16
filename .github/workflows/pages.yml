@@ -28,6 +28,7 @@ jobs:
         run: |
           node --check web/settings-browser.js
           node --check web/settings-react.js
+          node --check web/settings-react.test.mjs
           node --check web/reference-ui.js
           node web/validate-reference-fixture.mjs
       - name: Assemble browser distribution
@@ -75,11 +76,12 @@ jobs:
             if (!fs.existsSync(path)) throw new Error(`missing ${path}`);
           }
           NODE
-      - name: Typecheck React UI consumer contract
+      - name: Validate React UI consumer contract
         run: |
           npm install --no-save --package-lock=false --ignore-scripts \
             typescript@5.9.3 react@19.2.0 react-dom@19.2.0 \
             @types/react@19.2.2 @types/react-dom@19.2.2 @moritzbrantner/ui@1.1.0
+          node --test web/settings-react.test.mjs
           mkdir -p target/react-contract
           cat > target/react-contract/contract.tsx <<'TSX'
           import { SettingsBooleanField } from '../../dist/settings-react.js';
