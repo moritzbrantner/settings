@@ -11,4 +11,5 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 serde_json.workspace = true
 settings-core = { path = "../settings-core" }
+settings-presentation = { path = "../settings-presentation" }
 wasm-bindgen.workspace = true
