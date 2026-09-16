@@ -9,3 +9,6 @@ description = "Deterministic core semantics for user-facing application settings
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+
+[dev-dependencies]
+proptest = "1"
