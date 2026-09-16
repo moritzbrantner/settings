@@ -116,8 +116,7 @@ fn setting_values_can_disable_mutually_exclusive_controls() {
 
     let mut state = SettingsState::new();
     let capabilities = CapabilityFacts::new();
-    let blocked =
-        evaluate_availability(&registry, &state, &capabilities, &render_scale).unwrap();
+    let blocked = evaluate_availability(&registry, &state, &capabilities, &render_scale).unwrap();
     assert_eq!(blocked.status, AvailabilityStatus::Disabled);
     assert!(matches!(
         &blocked.reasons[..],
@@ -129,14 +128,9 @@ fn setting_values_can_disable_mutually_exclusive_controls() {
     ));
 
     state
-        .set(
-            &registry,
-            &upscaler,
-            SettingValue::Choice("off".into()),
-        )
+        .set(&registry, &upscaler, SettingValue::Choice("off".into()))
         .unwrap();
-    let available =
-        evaluate_availability(&registry, &state, &capabilities, &render_scale).unwrap();
+    let available = evaluate_availability(&registry, &state, &capabilities, &render_scale).unwrap();
     assert_eq!(available.status, AvailabilityStatus::Available);
 }
 
@@ -323,10 +317,7 @@ fn dependency_cycles_are_deterministic_and_registration_order_independent() {
     let reverse = build(true).dependency_cycles();
     assert_eq!(forward, reverse);
     assert_eq!(forward.len(), 2);
-    assert_eq!(
-        forward[0].settings,
-        vec![id("feature.a"), id("feature.b")]
-    );
+    assert_eq!(forward[0].settings, vec![id("feature.a"), id("feature.b")]);
     assert_eq!(forward[1].settings, vec![id("feature.self")]);
 }
 
