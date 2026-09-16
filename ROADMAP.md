@@ -39,13 +39,17 @@ Acceptance boundary: capability names remain opaque to the core; a renderer can 
 
 ## Slice 2 — Persistence, migration, and provenance
 
-- [ ] Explicit migration chain between schema versions.
-- [ ] Per-scope snapshots so device values are not accidentally cloud-synced with user values.
-- [ ] Load provenance: default, user override, preset, migration, policy, or command-line/session override.
-- [ ] Atomic storage-adapter contract with crash-safe replace semantics.
-- [ ] Forward-compatible unknown-entry preservation where safe.
-- [ ] Import/export with deterministic canonical representation.
-- [ ] Corruption diagnostics and recovery fixtures.
+- [x] Explicit migration chain between schema versions.
+- [x] Per-scope snapshots so device values are not accidentally cloud-synced with user values.
+- [x] Load provenance: default, user override, preset, migration, policy, or command-line/session override.
+- [x] Atomic storage-adapter contract with crash-safe replace semantics.
+- [x] Forward-compatible unknown-entry preservation where safe.
+- [x] Import/export with deterministic canonical representation.
+- [x] Corruption diagnostics and recovery fixtures.
+
+Schema v2 stores one `Save`, `Device`, or `User` scope per snapshot. `Session` is deliberately non-persistent. Migration from the legacy mixed-scope v1 envelope is explicit: known entries are partitioned through the current registry, while unknown legacy entries are dropped because their scope cannot be proven safely. Unknown v2 entries are retained verbatim because the enclosing snapshot supplies a trustworthy scope boundary.
+
+Acceptance boundary: user/device/save snapshots can be stored independently and merged into one runtime state; migrations and runtime override sources remain explainable; transient policy/command-line/session values do not leak into durable preferences; compatible corruption recovers safe entries with diagnostics; and re-exporting a recovered v2 snapshot is canonical and preserves safe unknown entries.
 
 ## Slice 3 — Presets and transactional application
 
