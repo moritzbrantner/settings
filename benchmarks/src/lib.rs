@@ -41,8 +41,7 @@ pub fn build_workload(size: usize, changed_every: usize) -> SettingsWorkload {
                 &registry,
                 setting_id.clone(),
                 PresentationMetadata {
-                    label_key: LocalizationKey::new(format!("benchmark.label.{index:05}"))
-                        .unwrap(),
+                    label_key: LocalizationKey::new(format!("benchmark.label.{index:05}")).unwrap(),
                     description_key: None,
                     category_key: LocalizationKey::new(format!(
                         "benchmark.category.{:02}",
