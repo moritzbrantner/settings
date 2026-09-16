@@ -1,7 +1,8 @@
-use criterion::{BenchmarkId, Criterion, Throughput, black_box, criterion_group, criterion_main};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group, criterion_main};
 use settings_benchmarks::{
     build_workload, materialize_diff, materialize_presentation, scan_effective_values,
 };
+use std::hint::black_box;
 
 fn settings_hot_paths(criterion: &mut Criterion) {
     let mut group = criterion.benchmark_group("settings_hot_paths");
