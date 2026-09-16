@@ -31,12 +31,36 @@ jobs:
           node web/validate-reference-fixture.mjs
       - name: Assemble browser distribution
         run: |
+          cp web/browser-package.json dist/package.json
           cp web/settings-browser.js dist/settings-browser.js
           cp web/settings-browser.d.ts dist/settings-browser.d.ts
           cp web/index.html dist/index.html
           cp web/reference-ui.js dist/reference-ui.js
           cp web/reference-ui.css dist/reference-ui.css
           cp fixtures/presentation/reference.json dist/reference-settings.json
+      - name: Validate installable browser package
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const manifest = JSON.parse(fs.readFileSync('dist/package.json', 'utf8'));
+          if (manifest.name !== '@moritzbrantner/settings-browser') {
+            throw new Error('unexpected browser package name');
+          }
+          if (manifest.types !== './settings-browser.d.ts') {
+            throw new Error('browser package types must point at the canonical declarations');
+          }
+          if (manifest.exports?.['.']?.import !== './settings-browser.js') {
+            throw new Error('browser package import must point at the canonical adapter');
+          }
+          for (const path of [
+            'dist/settings-browser.js',
+            'dist/settings-browser.d.ts',
+            'dist/pkg/settings_wasm.js',
+            'dist/pkg/settings_wasm_bg.wasm',
+          ]) {
+            if (!fs.existsSync(path)) throw new Error(`missing ${path}`);
+          }
+          NODE
       - uses: actions/upload-artifact@v4
         with:
           name: settings-browser-dist
