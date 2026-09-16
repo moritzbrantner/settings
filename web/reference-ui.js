@@ -8,6 +8,9 @@ const status = document.querySelector('#status');
 let session;
 let fixture;
 let definitions;
+let presentationEntries;
+let presentationById;
+let currentValues;
 
 initialize().catch((error) => {
   root.textContent = 'The reference settings UI could not be initialized.';
@@ -28,10 +31,19 @@ async function initialize() {
     fixture.definitions,
     fixture.presentation,
   );
+  presentationEntries = session.presentation();
+  presentationById = new Map(
+    presentationEntries.map((entry) => [entry.id, entry]),
+  );
+  refreshValues();
 
   searchInput.addEventListener('input', render);
   advancedInput.addEventListener('change', render);
   render();
+}
+
+function refreshValues() {
+  currentValues = session.effectiveValues();
 }
 
 function localize(key) {
@@ -41,8 +53,7 @@ function localize(key) {
 function render() {
   const query = searchInput.value.trim().toLocaleLowerCase();
   const showAdvanced = advancedInput.checked;
-  const values = session.effectiveValues();
-  const entries = session.presentation().filter((entry) => {
+  const entries = presentationEntries.filter((entry) => {
     const metadata = entry.metadata;
     if (!query) {
       if (metadata.discoverability === 'search_only') return false;
@@ -97,7 +108,7 @@ function render() {
         group.append(groupHeading);
       }
       for (const entry of groupEntries) {
-        group.append(createSettingRow(entry, values[entry.id]));
+        group.append(createSettingRow(entry, currentValues[entry.id]));
       }
       category.append(group);
     }
@@ -132,6 +143,7 @@ function createSettingRow(entry, value) {
   reset.textContent = 'Reset';
   reset.addEventListener('click', () => {
     session.reset(entry.id);
+    refreshValues();
     status.textContent = `${localize(entry.metadata.label_key)} reset to its consumer default.`;
     render();
   });
@@ -175,6 +187,8 @@ function createValueControl(id, definition, value) {
     case 'text': {
       const input = document.createElement('input');
       input.type = 'text';
+      input.minLength = definition.kind.min_chars;
+      input.maxLength = definition.kind.max_chars;
       input.value = value.value;
       input.setAttribute('aria-label', localizeLabel(id));
       input.addEventListener('change', () => {
@@ -214,12 +228,13 @@ function createNumericControl(id, kind, value, integer) {
 }
 
 function localizeLabel(id) {
-  const entry = session.presentation().find((candidate) => candidate.id === id);
+  const entry = presentationById.get(id);
   return entry ? localize(entry.metadata.label_key) : id;
 }
 
 function setValue(id, value) {
   session.set(id, value);
+  refreshValues();
   status.textContent = `${localizeLabel(id)} updated.`;
   render();
 }
