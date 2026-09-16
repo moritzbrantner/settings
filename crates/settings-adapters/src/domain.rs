@@ -1,7 +1,6 @@
 use settings_core::{
     CapabilityFacts, CapabilityId, RegistryError, SettingChange, SettingDefinition, SettingsRegistry,
 };
-use std::collections::BTreeMap;
 use thiserror::Error;
 
 /// Settings and capability facts exposed by one domain-owned subsystem.
@@ -11,19 +10,23 @@ use thiserror::Error;
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct AdapterDescriptor {
     definitions: Vec<SettingDefinition>,
-    capabilities: BTreeMap<CapabilityId, bool>,
+    capabilities: Vec<(CapabilityId, bool)>,
 }
 
 impl AdapterDescriptor {
     pub fn new(definitions: impl IntoIterator<Item = SettingDefinition>) -> Self {
         Self {
             definitions: definitions.into_iter().collect(),
-            capabilities: BTreeMap::new(),
+            capabilities: Vec::new(),
         }
     }
 
+    /// Adds one domain-reported capability fact.
+    ///
+    /// Declarations are intentionally retained rather than collapsed into a map. This lets atomic
+    /// installation reject contradictory duplicate facts instead of making builder order semantic.
     pub fn with_capability(mut self, id: CapabilityId, value: bool) -> Self {
-        self.capabilities.insert(id, value);
+        self.capabilities.push((id, value));
         self
     }
 
