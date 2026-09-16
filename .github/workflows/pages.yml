@@ -32,6 +32,7 @@ jobs:
       - name: Assemble browser distribution
         run: |
           cp web/settings-browser.js dist/settings-browser.js
+          cp web/settings-browser.d.ts dist/settings-browser.d.ts
           cp web/index.html dist/index.html
           cp web/reference-ui.js dist/reference-ui.js
           cp web/reference-ui.css dist/reference-ui.css
