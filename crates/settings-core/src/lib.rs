@@ -6,6 +6,7 @@ mod model;
 mod persistence;
 mod registry;
 mod state;
+mod storage;
 
 pub use availability::{
     AvailabilityCondition, AvailabilityEvaluation, AvailabilityPolicy, AvailabilityReason,
@@ -17,7 +18,11 @@ pub use error::{
 };
 pub use model::{ApplyMode, SettingDefinition, SettingId, SettingKind, SettingScope, SettingValue};
 pub use persistence::{
-    CURRENT_SCHEMA_VERSION, LoadDiagnostic, LoadReport, decode_json, encode_json,
+    CURRENT_SCHEMA_VERSION, LoadDiagnostic, LoadReport, MigrationRecord, PreservedEntries,
+    export_scope_json, import_scope_json,
 };
 pub use registry::SettingsRegistry;
-pub use state::{SettingChange, SettingsState, diff};
+pub use state::{
+    OverrideSource, SettingChange, SettingOverride, SettingsState, ValueProvenance, diff,
+};
+pub use storage::AtomicSettingsStorage;

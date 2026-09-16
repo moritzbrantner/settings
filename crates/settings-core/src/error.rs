@@ -1,4 +1,4 @@
-use crate::{SettingId, SettingValue};
+use crate::{SettingId, SettingScope, SettingValue};
 use thiserror::Error;
 
 #[derive(Clone, Debug, PartialEq, Eq, Error)]
@@ -68,4 +68,11 @@ pub enum PersistenceError {
     Json(#[from] serde_json::Error),
     #[error("unsupported settings schema version {found}; supported version is {supported}")]
     UnsupportedSchemaVersion { found: u32, supported: u32 },
+    #[error("settings scope `{0:?}` is ephemeral and cannot be persisted")]
+    NonPersistentScope(SettingScope),
+    #[error("settings snapshot scope mismatch: expected `{expected:?}`, found `{found:?}`")]
+    ScopeMismatch {
+        expected: SettingScope,
+        found: SettingScope,
+    },
 }
