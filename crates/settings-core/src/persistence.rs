@@ -1,4 +1,6 @@
-use crate::{PersistenceError, SettingId, SettingValue, SettingsRegistry, SettingsState};
+use crate::{
+    PersistenceError, SettingId, SettingScope, SettingValue, SettingsRegistry, SettingsState,
+};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -14,6 +16,7 @@ struct StoredSettings {
 pub enum LoadDiagnostic {
     UnknownSetting { id: SettingId },
     InvalidValue { id: SettingId, reason: String },
+    NonPersistentScope { id: SettingId, scope: SettingScope },
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -22,12 +25,23 @@ pub struct LoadReport {
     pub diagnostics: Vec<LoadDiagnostic>,
 }
 
-pub fn encode_json(state: &SettingsState) -> Result<String, PersistenceError> {
+pub fn encode_json(
+    registry: &SettingsRegistry,
+    state: &SettingsState,
+) -> Result<String, PersistenceError> {
     let stored = StoredSettings {
         schema_version: CURRENT_SCHEMA_VERSION,
         overrides: state
             .overrides()
-            .map(|(id, value)| (id.clone(), value.clone()))
+            .filter_map(|(id, value)| {
+                let definition = registry.get(id)?;
+                if definition.scope == SettingScope::Session
+                    || definition.validate_value(value).is_err()
+                {
+                    return None;
+                }
+                Some((id.clone(), value.clone()))
+            })
             .collect(),
     };
     Ok(serde_json::to_string_pretty(&stored)?)
@@ -49,8 +63,16 @@ pub fn decode_json(
     let mut diagnostics = Vec::new();
 
     for (id, value) in stored.overrides {
-        if registry.get(&id).is_none() {
+        let Some(definition) = registry.get(&id) else {
             diagnostics.push(LoadDiagnostic::UnknownSetting { id });
+            continue;
+        };
+
+        if definition.scope == SettingScope::Session {
+            diagnostics.push(LoadDiagnostic::NonPersistentScope {
+                id,
+                scope: SettingScope::Session,
+            });
             continue;
         }
 
