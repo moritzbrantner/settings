@@ -24,10 +24,11 @@ jobs:
         with:
           tool: wasm-pack
       - run: wasm-pack build crates/settings-wasm --target web --release --out-dir ../../dist/pkg --out-name settings_wasm
-      - name: Validate browser modules
+      - name: Validate browser modules and shared fixture
         run: |
           node --check web/settings-browser.js
           node --check web/reference-ui.js
+          node web/validate-reference-fixture.mjs
       - name: Assemble browser distribution
         run: |
           cp web/settings-browser.js dist/settings-browser.js
