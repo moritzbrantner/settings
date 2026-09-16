@@ -6,7 +6,7 @@ import type {
   SettingValue,
 } from './settings-browser.js';
 
-export type SettingsTranslate = (key: string) => React.ReactNode;
+export type SettingsLocalize = (key: string) => React.ReactNode;
 
 export interface SettingsBooleanFieldProps
   extends Omit<
@@ -16,7 +16,7 @@ export interface SettingsBooleanFieldProps
   definition: SettingDefinition & { kind: { type: 'bool' } };
   presentation: PresentationEntry;
   value: Extract<SettingValue, { type: 'bool' }>;
-  translate: SettingsTranslate;
+  localize: SettingsLocalize;
   onValueChange: (checked: boolean) => void;
 }
 
