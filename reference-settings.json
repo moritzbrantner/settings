@@ -1,0 +1,105 @@
+{
+  "definitions": [
+    {
+      "id": "accessibility.captions",
+      "kind": { "type": "bool" },
+      "default": { "type": "bool", "value": false },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "accessibility.reduce_motion",
+      "kind": { "type": "bool" },
+      "default": { "type": "bool", "value": false },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "audio.master_volume",
+      "kind": { "type": "integer", "min": 0, "max": 100 },
+      "default": { "type": "integer", "value": 80 },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "video.fullscreen",
+      "kind": { "type": "bool" },
+      "default": { "type": "bool", "value": false },
+      "scope": "device",
+      "apply_mode": "apply"
+    }
+  ],
+  "presentation": [
+    {
+      "id": "video.fullscreen",
+      "metadata": {
+        "label_key": "settings.video.fullscreen.label",
+        "description_key": "settings.video.fullscreen.description",
+        "category_key": "settings.category.video",
+        "group_key": "settings.group.display",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": ["settings.search.window_mode"]
+      }
+    },
+    {
+      "id": "audio.master_volume",
+      "metadata": {
+        "label_key": "settings.audio.master_volume.label",
+        "description_key": "settings.audio.master_volume.description",
+        "category_key": "settings.category.audio",
+        "group_key": "settings.group.volume",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": ["settings.search.sound", "settings.search.volume"]
+      }
+    },
+    {
+      "id": "accessibility.captions",
+      "metadata": {
+        "label_key": "settings.accessibility.captions.label",
+        "description_key": "settings.accessibility.captions.description",
+        "category_key": "settings.category.accessibility",
+        "group_key": "settings.group.perception",
+        "order": 20,
+        "discoverability": "primary",
+        "search_keys": ["settings.search.subtitles"]
+      }
+    },
+    {
+      "id": "accessibility.reduce_motion",
+      "metadata": {
+        "label_key": "settings.accessibility.reduce_motion.label",
+        "description_key": "settings.accessibility.reduce_motion.description",
+        "category_key": "settings.category.accessibility",
+        "group_key": "settings.group.motion",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": ["settings.search.animation", "settings.search.motion"]
+      }
+    }
+  ],
+  "localizations": {
+    "settings.category.accessibility": "Accessibility",
+    "settings.category.audio": "Audio",
+    "settings.category.video": "Video",
+    "settings.group.display": "Display",
+    "settings.group.motion": "Motion",
+    "settings.group.perception": "Perception",
+    "settings.group.volume": "Volume",
+    "settings.accessibility.captions.label": "Captions",
+    "settings.accessibility.captions.description": "Show captions for spoken and meaningful audio content.",
+    "settings.accessibility.reduce_motion.label": "Reduce motion",
+    "settings.accessibility.reduce_motion.description": "Reduce non-essential camera and interface motion.",
+    "settings.audio.master_volume.label": "Master volume",
+    "settings.audio.master_volume.description": "Adjust the overall output level.",
+    "settings.video.fullscreen.label": "Fullscreen",
+    "settings.video.fullscreen.description": "Use the full display for the application window.",
+    "settings.search.animation": "animation",
+    "settings.search.motion": "motion",
+    "settings.search.sound": "sound",
+    "settings.search.subtitles": "subtitles",
+    "settings.search.volume": "volume",
+    "settings.search.window_mode": "window mode"
+  }
+}

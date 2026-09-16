@@ -1,0 +1,16 @@
+{
+  "name": "settings-wasm",
+  "type": "module",
+  "version": "0.1.0",
+  "license": "MIT OR Apache-2.0",
+  "files": [
+    "settings_wasm_bg.wasm",
+    "settings_wasm.js",
+    "settings_wasm.d.ts"
+  ],
+  "main": "settings_wasm.js",
+  "types": "settings_wasm.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

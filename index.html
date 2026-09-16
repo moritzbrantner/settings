@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings reference UI</title>
+    <link rel="stylesheet" href="./reference-ui.css" />
+  </head>
+  <body>
+    <header class="page-header">
+      <div>
+        <p class="eyebrow">settings</p>
+        <h1>Reference settings UI</h1>
+        <p>
+          Presentation metadata comes from Rust; values remain authoritative in the
+          settings session.
+        </p>
+      </div>
+      <div class="filters" aria-label="Settings filters">
+        <label class="search-field">
+          <span>Search settings</span>
+          <input id="settings-search" type="search" autocomplete="off" />
+        </label>
+        <label class="advanced-toggle">
+          <input id="show-advanced" type="checkbox" />
+          <span>Show advanced settings</span>
+        </label>
+      </div>
+    </header>
+
+    <main id="settings-root" aria-live="polite"></main>
+    <p id="status" class="status" role="status"></p>
+
+    <script type="module" src="./reference-ui.js"></script>
+  </body>
+</html>
