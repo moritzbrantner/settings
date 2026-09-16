@@ -335,7 +335,10 @@ fn provenance_tracks_layered_override_sources_without_destroying_durable_state()
         state.effective_provenance(&registry, &setting),
         Some(ValueProvenance::Policy)
     );
-    assert_eq!(state.override_value(&setting), Some(&SettingValue::Integer(65)));
+    assert_eq!(
+        state.override_value(&setting),
+        Some(&SettingValue::Integer(65))
+    );
     assert_eq!(state.transient_override_count(), 1);
 
     state
