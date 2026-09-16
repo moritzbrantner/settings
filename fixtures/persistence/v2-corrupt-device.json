@@ -1,0 +1,11 @@
+{
+  "schema_version": 2,
+  "scope": "device",
+  "overrides": {
+    " bad ": { "type": "bool", "value": true },
+    "future.renderer.option": { "type": "choice", "value": "future" },
+    "video.fullscreen": { "unexpected": true },
+    "video.quality": { "type": "choice", "value": "cinematic" },
+    "video.vsync": { "type": "bool", "value": true }
+  }
+}

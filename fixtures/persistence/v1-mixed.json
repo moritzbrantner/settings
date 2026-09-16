@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "overrides": {
+    "audio.master_volume": { "type": "integer", "value": 55 },
+    "future.unknown": { "type": "bool", "value": true },
+    "video.fullscreen": { "type": "bool", "value": true }
+  }
+}
