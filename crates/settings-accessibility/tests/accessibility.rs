@@ -235,22 +235,15 @@ fn accessibility_preset_analysis_rejects_untagged_targets_before_returning_impac
     let settings = settings_registry();
     let accessibility = accessibility_registry(&settings);
     let mut preset = SettingsPreset::new(PresetId::new("invalid-accessibility-preset").unwrap());
-    preset.insert(
-        id("accessibility.captions"),
-        SettingValue::Bool(true),
-    );
+    preset.insert(id("accessibility.captions"), SettingValue::Bool(true));
     preset.insert(
         id("gameplay.difficulty"),
         SettingValue::Choice("easy".into()),
     );
 
-    let error = analyze_accessibility_preset(
-        &settings,
-        &SettingsState::new(),
-        &accessibility,
-        &preset,
-    )
-    .unwrap_err();
+    let error =
+        analyze_accessibility_preset(&settings, &SettingsState::new(), &accessibility, &preset)
+            .unwrap_err();
 
     assert!(matches!(
         error,
