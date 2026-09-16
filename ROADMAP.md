@@ -70,11 +70,17 @@ Acceptance boundary: applying a preset is atomic and uses ordinary validated set
 
 Keep adapters thin and domain authority outside this repository.
 
-- [ ] `input-bindings` integration descriptor so controls appear in a unified settings experience without duplicating binding semantics.
-- [ ] Graphics adapter contract for renderer-owned capabilities and application.
-- [ ] Audio adapter contract for mixer/device-owned settings.
-- [ ] Gameplay/application adapter examples using consumer-owned commands.
-- [ ] Shared fixtures proving adapters do not change core semantics.
+- [x] `input-bindings` integration descriptor so controls appear in a unified settings experience without duplicating binding semantics.
+- [x] Graphics adapter contract for renderer-owned capabilities and application.
+- [x] Audio adapter contract for mixer/device-owned settings.
+- [x] Gameplay/application adapter examples using consumer-owned commands.
+- [x] Shared fixtures proving adapters do not change core semantics.
+
+`settings-adapters` contains only composition contracts. Domain adapters expose ordinary `settings-core` definitions and capability facts, then translate committed changes into consumer-owned command types; the crate never executes renderer, mixer, gameplay, or application behavior. Adapter installation is atomic and rejects contradictory capability facts rather than partially mutating the shared registry.
+
+The `input-bindings` seam is deliberately only an opaque configuration-surface identifier. Actions, chords, contexts, conflicts, profiles, persistence, and the actual editor remain authoritative in the `input-bindings` repository and are not mirrored as generic setting values.
+
+Acceptance boundary: installing an adapter produces the same registry, availability, and setting semantics as direct `settings-core` registration; conflicting installation fails without partial state; graphics/audio/application examples emit only consumer-owned commands; and the input-bindings descriptor contains no binding model to drift from the authoritative foundation.
 
 ## Slice 5 — Accessibility semantics
 
