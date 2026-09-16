@@ -86,13 +86,21 @@ Acceptance boundary: installing an adapter produces the same registry, availabil
 
 Accessibility is cross-cutting rather than a single settings category.
 
-- [ ] Semantic tags for settings that affect motion, captions, contrast, audio cues, timing, haptics, input, and text presentation.
-- [ ] Accessibility presets implemented as normal preset values.
-- [ ] Conflict/explanation surface when a preset would overwrite explicit choices.
-- [ ] First-launch/bootstrap query so critical accessibility options can be offered before normal navigation.
-- [ ] Machine-readable presentation metadata for accessible settings UIs.
+- [x] Semantic tags for settings that affect motion, captions, contrast, audio cues, timing, haptics, input, and text presentation.
+- [x] Accessibility presets implemented as normal preset values.
+- [x] Conflict/explanation surface when a preset would overwrite explicit choices.
+- [x] First-launch/bootstrap query so critical accessibility options can be offered before normal navigation.
+- [x] Machine-readable presentation metadata for accessible settings UIs.
 
-The actual caption renderer, narration, input engine, camera, and game rules remain in their owning repositories.
+`settings-accessibility` keeps accessibility metadata separate from ordinary setting definitions, so a setting can participate in several accessibility facets without turning those facets into mutually exclusive categories. Metadata registration is validated against the ordinary settings registry and iterates deterministically by setting identifier.
+
+Accessibility presets remain ordinary `SettingsPreset` values. Before applying one, `analyze_accessibility_preset` validates that every target is accessibility-tagged and returns a structured impact report covering the durable preference, the currently effective value/provenance, and whether the preset would replace an explicit user choice. This remains correct when a policy or other transient override masks the durable value.
+
+Bootstrap metadata carries only accessibility-specific priority. The application owns the decision that it is in a first-launch/bootstrap flow; the settings foundation does not infer first launch from the absence of overrides. General localization keys, categories, search metadata, and layout ordering remain part of Slice 6.
+
+The actual caption renderer, narration, input engine, camera, haptics, audio behavior, and game rules remain in their owning repositories.
+
+Acceptance boundary: accessibility metadata cannot reference unknown settings, empty or duplicate metadata fails closed, multiple semantic tags remain machine-readable, bootstrap candidates are ordered deterministically, accessibility presets use the canonical core preset path, and explicit-choice conflicts remain explainable even when the runtime value is masked by a transient override.
 
 ## Slice 6 — Presentation model and web/WASM consumption
 
