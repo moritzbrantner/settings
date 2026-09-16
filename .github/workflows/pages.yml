@@ -1,4 +1,4 @@
-name: Pages
+name: Browser distribution
 
 on:
   pull_request:
@@ -6,18 +6,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 concurrency:
-  group: pages-${{ github.ref }}
+  group: browser-distribution-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -28,18 +25,39 @@ jobs:
           tool: wasm-pack
       - run: wasm-pack build crates/settings-wasm --target web --release --out-dir ../../dist/pkg --out-name settings_wasm
       - run: cp web/settings-browser.js dist/settings-browser.js
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
+          name: settings-browser-dist
           path: dist
+          if-no-files-found: error
 
-  deploy:
+  publish:
     if: github.event_name != 'pull_request'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: settings-browser-dist
+          path: dist
+      - name: Publish generated browser distribution
+        env:
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          publish_dir="$(mktemp -d)"
+          cp -R dist/. "$publish_dir/"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan browser-dist
+          git rm -rf --ignore-unmatch .
+          git clean -fdx
+          cp -R "$publish_dir/." .
+          touch .nojekyll
+          printf '%s\n' "$SOURCE_SHA" > SOURCE_SHA
+          git add -A
+          git commit -m "Publish browser distribution for $SOURCE_SHA"
+          git push --force origin HEAD:browser-dist
