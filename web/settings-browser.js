@@ -4,12 +4,12 @@ export const SETTINGS_BROWSER_API_VERSION = 1;
 
 let initialization;
 
-export async function createSettingsSession(definitions) {
+export async function createSettingsSession(definitions, presentation = []) {
   initialization ??= initSettingsWasm();
   await initialization;
-  return new BrowserSettingsSession(
-    new SettingsSession(JSON.stringify(definitions)),
-  );
+  const inner = new SettingsSession(JSON.stringify(definitions));
+  inner.load_presentation_json(JSON.stringify(presentation));
+  return new BrowserSettingsSession(inner);
 }
 
 class BrowserSettingsSession {
@@ -17,6 +17,10 @@ class BrowserSettingsSession {
 
   constructor(inner) {
     this.#inner = inner;
+  }
+
+  presentation() {
+    return JSON.parse(this.#inner.presentation_json());
   }
 
   effectiveValues() {
