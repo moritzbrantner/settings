@@ -1,7 +1,7 @@
 {
   "name": "@moritzbrantner/settings-browser",
-  "version": "0.1.0",
-  "description": "Typed browser/WASM adapter for the settings foundation",
+  "version": "0.2.0",
+  "description": "Typed browser/WASM adapter and optional React UI bridge for the settings foundation",
   "license": "MIT",
   "type": "module",
   "main": "./settings-browser.js",
@@ -13,12 +13,31 @@
       "import": "./settings-browser.js",
       "default": "./settings-browser.js"
     },
+    "./react": {
+      "types": "./settings-react.d.ts",
+      "import": "./settings-react.js",
+      "default": "./settings-react.js"
+    },
     "./package.json": "./package.json"
   },
   "files": [
     "settings-browser.js",
     "settings-browser.d.ts",
+    "settings-react.js",
+    "settings-react.d.ts",
     "pkg"
   ],
+  "peerDependencies": {
+    "@moritzbrantner/ui": ">=1.1.0",
+    "react": ">=19.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@moritzbrantner/ui": {
+      "optional": true
+    },
+    "react": {
+      "optional": true
+    }
+  },
   "sideEffects": false
 }
