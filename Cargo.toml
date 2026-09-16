@@ -4,6 +4,7 @@ members = [
     "crates/settings-wasm",
     "crates/settings-adapters",
     "crates/settings-accessibility",
+    "crates/settings-presentation",
 ]
 resolver = "2"
 
