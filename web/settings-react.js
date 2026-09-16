@@ -1,4 +1,4 @@
-import { createElement } from 'react';
+import { createElement, useId } from 'react';
 import { ToggleSetting } from '@moritzbrantner/ui/stable';
 
 export function SettingsBooleanField({
@@ -16,9 +16,21 @@ export function SettingsBooleanField({
 }) {
   assertBooleanBinding(definition, presentation, value);
 
+  const generatedId = useId();
+  const resolvedId = id ?? generatedId;
+  const {
+    id: _switchId,
+    checked: _switchChecked,
+    defaultChecked: _switchDefaultChecked,
+    disabled: _switchDisabled,
+    onCheckedChange: _switchOnCheckedChange,
+    ...safeSwitchProps
+  } = switchProps ?? {};
   const metadata = presentation.metadata;
+
   return createElement(ToggleSetting, {
-    id: id ?? `setting-${definition.id.replaceAll('.', '-')}`,
+    ...props,
+    id: resolvedId,
     title: localize(metadata.label_key),
     description: metadata.description_key
       ? localize(metadata.description_key)
@@ -28,10 +40,9 @@ export function SettingsBooleanField({
     disabled,
     onCheckedChange: onValueChange,
     className,
-    switchProps,
+    switchProps: safeSwitchProps,
     'data-setting-id': definition.id,
     'data-setting-kind': 'bool',
-    ...props,
   });
 }
 
