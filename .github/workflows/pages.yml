@@ -27,6 +27,8 @@ jobs:
       - name: Validate browser modules and shared fixture
         run: |
           node --check web/settings-browser.js
+          node --check web/settings-react.js
+          node --check web/settings-react.test.mjs
           node --check web/reference-ui.js
           node web/validate-reference-fixture.mjs
       - name: Assemble browser distribution
@@ -34,6 +36,8 @@ jobs:
           cp web/browser-package.json dist/package.json
           cp web/settings-browser.js dist/settings-browser.js
           cp web/settings-browser.d.ts dist/settings-browser.d.ts
+          cp web/settings-react.js dist/settings-react.js
+          cp web/settings-react.d.ts dist/settings-react.d.ts
           cp web/index.html dist/index.html
           cp web/reference-ui.js dist/reference-ui.js
           cp web/reference-ui.css dist/reference-ui.css
@@ -52,15 +56,78 @@ jobs:
           if (manifest.exports?.['.']?.import !== './settings-browser.js') {
             throw new Error('browser package import must point at the canonical adapter');
           }
+          if (manifest.exports?.['./react']?.import !== './settings-react.js') {
+            throw new Error('react subpath must point at the React UI bridge');
+          }
+          if (manifest.exports?.['./react']?.types !== './settings-react.d.ts') {
+            throw new Error('react subpath must expose canonical React declarations');
+          }
+          if (manifest.peerDependencies?.['@moritzbrantner/ui'] !== '>=1.1.0') {
+            throw new Error('react bridge must declare the stable shared UI peer');
+          }
           for (const path of [
             'dist/settings-browser.js',
             'dist/settings-browser.d.ts',
+            'dist/settings-react.js',
+            'dist/settings-react.d.ts',
             'dist/pkg/settings_wasm.js',
             'dist/pkg/settings_wasm_bg.wasm',
           ]) {
             if (!fs.existsSync(path)) throw new Error(`missing ${path}`);
           }
           NODE
+      - name: Validate React UI consumer contract
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts \
+            typescript@5.9.3 react@19.2.0 react-dom@19.2.0 \
+            @types/react@19.2.2 @types/react-dom@19.2.2 @moritzbrantner/ui@1.1.0
+          node --test web/settings-react.test.mjs
+          mkdir -p target/react-contract
+          cat > target/react-contract/contract.tsx <<'TSX'
+          import { SettingsBooleanField } from '../../dist/settings-react.js';
+          import type {
+            PresentationEntry,
+            SettingDefinition,
+            SettingValue,
+          } from '../../dist/settings-browser.js';
+
+          const definition = {
+            id: 'accessibility.reduce_motion',
+            kind: { type: 'bool' },
+            default: { type: 'bool', value: false },
+            scope: 'user',
+            apply_mode: 'immediate',
+          } as const satisfies SettingDefinition;
+          const presentation = {
+            id: definition.id,
+            metadata: {
+              label_key: 'settings.reduceMotion.title',
+              description_key: 'settings.reduceMotion.description',
+              category_key: 'settings.presentation',
+            },
+          } as const satisfies PresentationEntry;
+          const value = { type: 'bool', value: true } as const satisfies SettingValue;
+
+          const field = (
+            <SettingsBooleanField
+              definition={definition}
+              presentation={presentation}
+              value={value}
+              localize={(key) => key}
+              onValueChange={() => undefined}
+            />
+          );
+          void field;
+          TSX
+          ./node_modules/.bin/tsc \
+            --noEmit \
+            --strict \
+            --jsx react-jsx \
+            --module ESNext \
+            --target ES2022 \
+            --moduleResolution Bundler \
+            target/react-contract/contract.tsx
+          node -e "import('./dist/settings-react.js').then(({ SettingsBooleanField }) => { if (typeof SettingsBooleanField !== 'function') throw new Error('missing SettingsBooleanField export'); })"
       - uses: actions/upload-artifact@v4
         with:
           name: settings-browser-dist
