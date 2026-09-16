@@ -108,8 +108,14 @@ fn preset_changes_can_update_durable_preferences_beneath_a_policy_without_faking
         state.effective_value(&registry, &setting),
         Some(&SettingValue::Integer(10))
     );
-    assert_eq!(state.override_value(&setting), Some(&SettingValue::Integer(40)));
-    assert_eq!(state.override_source(&setting), Some(&OverrideSource::Preset));
+    assert_eq!(
+        state.override_value(&setting),
+        Some(&SettingValue::Integer(40))
+    );
+    assert_eq!(
+        state.override_source(&setting),
+        Some(&OverrideSource::Preset)
+    );
 }
 
 #[test]
