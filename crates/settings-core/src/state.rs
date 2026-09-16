@@ -122,6 +122,10 @@ impl SettingsState {
         Ok(())
     }
 
+    pub fn reset_all(&mut self) {
+        self.durable_overrides.clear();
+    }
+
     pub fn clear_transient_override(&mut self, id: &SettingId, source: OverrideSource) -> bool {
         match source {
             OverrideSource::Policy => self.policy_overrides.remove(id).is_some(),
@@ -244,6 +248,13 @@ impl SettingsState {
             + self.command_line_overrides.len()
             + self.session_overrides.len()
     }
+
+    pub(crate) fn setting_layers_equal(&self, other: &Self, id: &SettingId) -> bool {
+        self.durable_overrides.get(id) == other.durable_overrides.get(id)
+            && self.policy_overrides.get(id) == other.policy_overrides.get(id)
+            && self.command_line_overrides.get(id) == other.command_line_overrides.get(id)
+            && self.session_overrides.get(id) == other.session_overrides.get(id)
+    }
 }
 
 fn valid_transient<'a>(
@@ -261,6 +272,8 @@ pub struct SettingChange {
     pub id: SettingId,
     pub before: SettingValue,
     pub after: SettingValue,
+    pub before_provenance: ValueProvenance,
+    pub after_provenance: ValueProvenance,
     pub apply_mode: ApplyMode,
 }
 
@@ -272,12 +285,17 @@ pub fn diff(
     registry
         .iter()
         .filter_map(|(id, definition)| {
-            let before = before.effective_value(registry, id)?;
-            let after = after.effective_value(registry, id)?;
-            (before != after).then(|| SettingChange {
+            let before_value = before.effective_value(registry, id)?;
+            let after_value = after.effective_value(registry, id)?;
+            if before_value == after_value {
+                return None;
+            }
+            Some(SettingChange {
                 id: id.clone(),
-                before: before.clone(),
-                after: after.clone(),
+                before: before_value.clone(),
+                after: after_value.clone(),
+                before_provenance: before.effective_provenance(registry, id)?,
+                after_provenance: after.effective_provenance(registry, id)?,
                 apply_mode: definition.apply_mode,
             })
         })

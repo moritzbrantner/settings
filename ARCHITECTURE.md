@@ -2,7 +2,7 @@
 
 ## Authority boundary
 
-`settings-core` is authoritative for generic setting semantics: identity, types, constraints, defaults, scopes, apply modes, overrides, deterministic diffs, declarative availability, provenance, and the portable persistence envelope.
+`settings-core` is authoritative for generic setting semantics: identity, types, constraints, defaults, scopes, apply modes, overrides, deterministic diffs, declarative availability, provenance, transactions, presets, and the portable persistence envelope.
 
 It is not authoritative for domain behavior.
 
@@ -12,7 +12,7 @@ It is not authoritative for domain behavior.
 - Games and applications own gameplay/application-specific settings and defaults.
 - UI layers own presentation, localization, focus/navigation, and platform-native controls.
 
-Consumers register settings and translate committed changes into their own domain commands. This prevents the settings repository from becoming a dependency magnet or a second implementation of domain behavior.
+Consumers register settings and translate committed or preview changes into their own domain commands. This prevents the settings repository from becoming a dependency magnet or a second implementation of domain behavior.
 
 ## Consumer-owned defaults, delta-owned preferences
 
@@ -24,7 +24,7 @@ That means changing a consumer default does not copy or rewrite every user's pro
 
 Registration order is never semantic.
 
-Definitions and overrides use ordered maps, so iteration, diffs, dependency diagnostics, and serialized maps have stable ordering. The same registry and override set therefore produce the same effective values, change list, availability result, and canonical persistence representation.
+Definitions and overrides use ordered maps, so iteration, diffs, dependency diagnostics, preset application, and serialized maps have stable ordering. The same registry and state therefore produce the same effective values, change list, availability result, transaction plans, and canonical persistence representation.
 
 Floating-point setting values must be finite. NaN and infinities are rejected because they do not provide stable equality or portable persistence semantics.
 
@@ -34,7 +34,7 @@ A definition declares a value kind and constraints. Registration validates the d
 
 Unknown setting identifiers and invalid persisted values are fail-closed: they are not applied. Compatible snapshots recover independently valid entries and return diagnostics for invalid or corrupt entries.
 
-Identifiers retain their validation boundary during deserialization; Serde does not bypass `SettingId` or `CapabilityId` invariants.
+Identifiers retain their validation boundary during deserialization; Serde does not bypass `SettingId`, `CapabilityId`, or `PresetId` invariants.
 
 ## Scopes
 
@@ -73,9 +73,11 @@ The absence of any applicable override is reported as the consumer default. Effe
 
 A transient overlay never destroys the durable value underneath it. For example, a policy may temporarily force volume to 10 while the user's durable preference remains 65. Export still writes 65; removing the policy reveals 65 again. A transient value equal to the consumer default is still retained because it may intentionally mask a durable override.
 
-Provenance is queryable separately from the effective value. This lets presentation and support tooling explain why a value is active without changing value semantics. `reset` changes the durable preference only; explicit transient-removal APIs remove policy, command-line, or session overlays without conflating them with user preference state.
+Provenance is queryable separately from the effective value and appears on deterministic value-change records as before/after provenance. This lets presentation and support tooling explain why a value is active without changing value semantics. `reset` changes the durable preference only; explicit transient-removal APIs remove policy, command-line, or session overlays without conflating them with user preference state.
 
 Only durable sources are eligible for portable persistence. A migration load records the source schema version so migrated values are distinguishable from values read directly from the current schema.
+
+A provenance-only edit can make a transaction dirty without producing a domain value-change record. This prevents consumers from reapplying an unchanged renderer/audio/game value merely because its explanatory provenance changed.
 
 ## Apply modes
 
@@ -87,6 +89,34 @@ The model distinguishes:
 - `Reconnect`: accepted now, effective after reconnect/reload of an external session.
 
 `settings-core` exposes the mode on deterministic change records. It does not directly call a renderer, restart a process, or reconnect a service.
+
+## Presets
+
+A preset is a validated identifier plus an ordered map of ordinary setting values. It is not another settings store and does not bypass normal definition validation.
+
+Applying a preset happens against a cloned candidate state. Every value must validate before the candidate replaces the caller's state, so a partially invalid preset cannot leave half-applied changes. Successful preset values use normal durable overrides with `Preset` provenance; setting a preset value equal to the current consumer default still canonicalizes to no durable override.
+
+Transient overlays remain separate while a preset is applied. A preset can therefore update the durable preference beneath an active policy or command-line override without pretending that the currently effective runtime value changed.
+
+## Transactions and preview
+
+`SettingsTransaction` owns a baseline state and an independently mutable staged state. Staging never mutates the baseline.
+
+The transaction exposes deterministic pending value changes and a separate immediate-preview subset. Consumers that choose to preview `Immediate` changes can apply those effects in their authoritative domains. On cancel, the core computes reverse changes from staged back to baseline and returns only the immediate changes that may need external reversal. Non-immediate staged values were never required to be applied and therefore do not appear in the cancel revert plan.
+
+Commit returns the staged state plus the deterministic baseline-to-staged value changes. Each value change carries before/after provenance and apply mode. The application composition layer remains responsible for dispatching those changes to the renderer, audio engine, input system, game rules, or other authoritative domain.
+
+Dirty state compares the full layered state rather than only effective values. Per-setting dirty queries therefore detect durable provenance changes and transient-layer edits even when a higher-precedence overlay masks the domain value. Such edits can be dirty while `pending_changes` remains empty, because no external runtime effect needs to be applied.
+
+Section reset is intentionally represented as resetting a caller-supplied list of setting identifiers; section/category ownership belongs to the later presentation model. Global reset clears all durable preferences. Neither reset operation removes policy, command-line, or session overlays because those are not user preference state.
+
+## Timed safety rollback
+
+Risky display changes often need a confirm-or-revert flow. `TimedSafetyRollback` holds a baseline state, a candidate state, and a caller-defined monotonic deadline tick.
+
+The core never reads wall-clock or platform timers. The caller supplies `now_tick`, making pending/confirmed/expired decisions deterministic and testable. Confirmation is accepted only before expiry. Once expired, the core returns a candidate-to-baseline rollback plan and resolves to the baseline state; once confirmed, it resolves to the candidate and produces no rollback plan. A pending rollback deliberately has no resolved state, preventing a caller from accidentally treating an unconfirmed risky candidate as final.
+
+The primitive deliberately does not decide which settings are risky. A renderer/application chooses when to wrap a committed candidate in this safety mechanism.
 
 ## Capabilities and availability
 
@@ -130,7 +160,7 @@ This boundary keeps crash-safety responsibilities explicit while allowing local 
 
 ## CQS shape
 
-Reads (`get`, effective-value/provenance lookup, availability evaluation, iteration, diffing, dependency diagnostics, export) are separate from mutations (`register`, `set`, `reset`, transient-overlay removal, merge/import into caller-owned state). The crate keeps this lightweight and in-process; it does not introduce messaging, event sourcing, projections, or distributed CQRS infrastructure.
+Reads (`get`, effective-value/provenance lookup, availability evaluation, iteration, diffing, dependency diagnostics, dirty queries, export) are separate from mutations (`register`, `set`, `reset`, transaction staging, transient-overlay removal, merge/import into caller-owned state). The crate keeps this lightweight and in-process; it does not introduce messaging, event sourcing, projections, or distributed CQRS infrastructure.
 
 ## Dependency direction
 
