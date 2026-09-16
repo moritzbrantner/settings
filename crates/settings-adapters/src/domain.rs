@@ -68,14 +68,14 @@ pub fn install_adapter_descriptor(
     }
 
     for (id, incoming) in descriptor.capabilities() {
-        if let Some(existing) = candidate_capabilities.get(id) {
-            if existing != incoming {
-                return Err(AdapterInstallError::CapabilityConflict {
-                    id: id.clone(),
-                    existing,
-                    incoming,
-                });
-            }
+        if let Some(existing) = candidate_capabilities.get(id)
+            && existing != incoming
+        {
+            return Err(AdapterInstallError::CapabilityConflict {
+                id: id.clone(),
+                existing,
+                incoming,
+            });
         }
         candidate_capabilities.set(id.clone(), incoming);
     }
