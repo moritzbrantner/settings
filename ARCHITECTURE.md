@@ -18,7 +18,7 @@ Consumers register settings and translate committed changes into their own domai
 
 Defaults belong to the consumer that understands the domain. `settings-core` stores only values that differ from those defaults.
 
-That means changing a consumer default does not copy or rewrite every user's profile, while an explicit user choice still wins. Setting a value back to its current default removes the override. This mirrors the delta-based profile principle used by `input-bindings`.
+That means changing a consumer default does not copy or rewrite every user's profile, while an explicit user choice still wins. Setting a durable value back to its current default removes the durable override. This mirrors the delta-based profile principle used by `input-bindings`.
 
 ## Determinism
 
@@ -49,21 +49,33 @@ Schema v2 persists exactly one durable scope per snapshot. This prevents device-
 
 Independently loaded `Save`, `Device`, and `User` states can be merged into one runtime state after each snapshot has been validated against the active registry.
 
-## Provenance
+## Provenance and layered overrides
 
-An override carries both its value and source. The core distinguishes:
+Durable preferences and transient runtime overlays are deliberately separate. Durable overrides carry both a value and one of these sources:
 
 - user override,
 - preset,
-- migration,
+- migration.
+
+Transient overlays use these sources:
+
 - policy,
 - command-line override,
-- session override,
-- and the absence of an override, which is reported as the consumer default.
+- session override.
 
-Provenance is queryable separately from the effective value. This lets presentation and support tooling explain why a value is active without changing value semantics.
+The absence of any applicable override is reported as the consumer default. Effective precedence is deterministic and explicit:
 
-Only sources that represent durable preference state are eligible for portable persistence. Policy, command-line, and session overrides remain runtime overlays and are deliberately filtered out during export. A migration load records the source schema version so migrated values are distinguishable from values read directly from the current schema.
+1. policy,
+2. command-line override,
+3. session override,
+4. durable override,
+5. consumer default.
+
+A transient overlay never destroys the durable value underneath it. For example, a policy may temporarily force volume to 10 while the user's durable preference remains 65. Export still writes 65; removing the policy reveals 65 again. A transient value equal to the consumer default is still retained because it may intentionally mask a durable override.
+
+Provenance is queryable separately from the effective value. This lets presentation and support tooling explain why a value is active without changing value semantics. `reset` changes the durable preference only; explicit transient-removal APIs remove policy, command-line, or session overlays without conflating them with user preference state.
+
+Only durable sources are eligible for portable persistence. A migration load records the source schema version so migrated values are distinguishable from values read directly from the current schema.
 
 ## Apply modes
 
@@ -100,7 +112,9 @@ Persistence is data-oriented: `settings-core` does not own filesystem paths, dat
 
 Schema v2 contains a schema version, one explicit durable scope, and an ordered map of delta-only overrides. Import checks that the envelope's scope matches the requested target before applying values.
 
-Schema upgrades run through an explicit migration chain. The current v1-to-v2 migration partitions known legacy entries by consulting the active registry. Unknown v1 entries are dropped with diagnostics because the old mixed-scope envelope provides no trustworthy way to decide whether they belong to `Save`, `Device`, or `User`. Unknown entries in v2 are preserved verbatim because the enclosing v2 scope makes their storage boundary safe. If a later registry starts recognizing one of those identifiers, the known definition takes precedence over the preserved raw entry.
+Schema upgrades run through an explicit migration chain. The current v1-to-v2 migration partitions known legacy entries by consulting the active registry. Unknown v1 entries are dropped with diagnostics because the old mixed-scope envelope provides no trustworthy way to decide whether they belong to `Save`, `Device`, or `User`.
+
+Unknown entries in v2 are preserved verbatim because the enclosing v2 scope makes their storage boundary safe. The preserved-entry collection itself is tagged with that source scope, and export rejects a collection whose scope does not match the target snapshot. Device-local unknown data therefore cannot accidentally be inserted into a `User` snapshot merely because the application merged multiple runtime states. If a later registry starts recognizing a preserved identifier, the known definition takes precedence over the preserved raw entry.
 
 Corruption recovery is entry-oriented for a structurally readable, supported envelope. Bad identifiers, malformed values, invalid known values, and scope mismatches are skipped with diagnostics while independent valid entries are recovered. A malformed envelope or unsupported future schema fails as a whole rather than being guessed.
 
@@ -116,7 +130,7 @@ This boundary keeps crash-safety responsibilities explicit while allowing local 
 
 ## CQS shape
 
-Reads (`get`, effective-value/provenance lookup, availability evaluation, iteration, diffing, dependency diagnostics, export) are separate from mutations (`register`, `set`, `reset`, merge/import into caller-owned state). The crate keeps this lightweight and in-process; it does not introduce messaging, event sourcing, projections, or distributed CQRS infrastructure.
+Reads (`get`, effective-value/provenance lookup, availability evaluation, iteration, diffing, dependency diagnostics, export) are separate from mutations (`register`, `set`, `reset`, transient-overlay removal, merge/import into caller-owned state). The crate keeps this lightweight and in-process; it does not introduce messaging, event sourcing, projections, or distributed CQRS infrastructure.
 
 ## Dependency direction
 
