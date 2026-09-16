@@ -7,12 +7,14 @@ use crate::{
 pub struct SettingsTransaction {
     baseline: SettingsState,
     staged: SettingsState,
+    previewed: SettingsState,
 }
 
 impl SettingsTransaction {
     pub fn new(baseline: SettingsState) -> Self {
         Self {
             staged: baseline.clone(),
+            previewed: baseline.clone(),
             baseline,
         }
     }
@@ -89,23 +91,41 @@ impl SettingsTransaction {
         diff(registry, &self.baseline, &self.staged)
     }
 
-    pub fn immediate_preview_changes(&self, registry: &SettingsRegistry) -> Vec<SettingChange> {
-        self.pending_changes(registry)
+    pub fn take_immediate_preview_changes(
+        &mut self,
+        registry: &SettingsRegistry,
+    ) -> Vec<SettingChange> {
+        let changes = diff(registry, &self.previewed, &self.staged)
             .into_iter()
             .filter(|change| change.apply_mode == ApplyMode::Immediate)
-            .collect()
+            .collect();
+        self.previewed = self.staged.clone();
+        changes
     }
 
     pub fn commit(self, registry: &SettingsRegistry) -> TransactionCommit {
         let changes = diff(registry, &self.baseline, &self.staged);
+        let mut apply_changes: Vec<_> = changes
+            .iter()
+            .filter(|change| change.apply_mode != ApplyMode::Immediate)
+            .cloned()
+            .collect();
+        apply_changes.extend(
+            diff(registry, &self.previewed, &self.staged)
+                .into_iter()
+                .filter(|change| change.apply_mode == ApplyMode::Immediate),
+        );
+        apply_changes.sort_by(|left, right| left.id.cmp(&right.id));
+
         TransactionCommit {
             state: self.staged,
             changes,
+            apply_changes,
         }
     }
 
     pub fn cancel(self, registry: &SettingsRegistry) -> TransactionCancel {
-        let immediate_revert = diff(registry, &self.staged, &self.baseline)
+        let immediate_revert = diff(registry, &self.previewed, &self.baseline)
             .into_iter()
             .filter(|change| change.apply_mode == ApplyMode::Immediate)
             .collect();
@@ -120,6 +140,7 @@ impl SettingsTransaction {
 pub struct TransactionCommit {
     pub state: SettingsState,
     pub changes: Vec<SettingChange>,
+    pub apply_changes: Vec<SettingChange>,
 }
 
 #[derive(Clone, Debug, PartialEq)]
