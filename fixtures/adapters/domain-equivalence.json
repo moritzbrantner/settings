@@ -1,0 +1,29 @@
+{
+  "definitions": [
+    {
+      "id": "video.hdr",
+      "kind": { "type": "bool" },
+      "default": { "type": "bool", "value": false },
+      "scope": "device",
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.hdr",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
+      "id": "audio.master_volume",
+      "kind": { "type": "integer", "min": 0, "max": 100 },
+      "default": { "type": "integer", "value": 80 },
+      "scope": "user",
+      "apply_mode": "immediate"
+    }
+  ],
+  "capabilities": [
+    { "id": "renderer.hdr", "value": true }
+  ]
+}
