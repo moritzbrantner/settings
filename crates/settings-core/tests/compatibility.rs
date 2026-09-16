@@ -35,13 +35,7 @@ fn registry() -> SettingsRegistry {
 fn canonical_export(scope: SettingScope, input: &str) -> String {
     let registry = registry();
     let loaded = import_scope_json(&registry, scope, input).unwrap();
-    export_scope_json(
-        &registry,
-        &loaded.state,
-        scope,
-        &loaded.preserved_entries,
-    )
-    .unwrap()
+    export_scope_json(&registry, &loaded.state, scope, &loaded.preserved_entries).unwrap()
 }
 
 #[test]
