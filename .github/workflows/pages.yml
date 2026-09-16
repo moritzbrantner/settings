@@ -24,7 +24,19 @@ jobs:
         with:
           tool: wasm-pack
       - run: wasm-pack build crates/settings-wasm --target web --release --out-dir ../../dist/pkg --out-name settings_wasm
-      - run: cp web/settings-browser.js dist/settings-browser.js
+      - name: Validate browser modules and shared fixture
+        run: |
+          node --check web/settings-browser.js
+          node --check web/reference-ui.js
+          node web/validate-reference-fixture.mjs
+      - name: Assemble browser distribution
+        run: |
+          cp web/settings-browser.js dist/settings-browser.js
+          cp web/settings-browser.d.ts dist/settings-browser.d.ts
+          cp web/index.html dist/index.html
+          cp web/reference-ui.js dist/reference-ui.js
+          cp web/reference-ui.css dist/reference-ui.css
+          cp fixtures/presentation/reference.json dist/reference-settings.json
       - uses: actions/upload-artifact@v4
         with:
           name: settings-browser-dist

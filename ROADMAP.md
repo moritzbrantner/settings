@@ -104,11 +104,19 @@ Acceptance boundary: accessibility metadata cannot reference unknown settings, e
 
 ## Slice 6 — Presentation model and web/WASM consumption
 
-- [ ] Stable category/group/order metadata using localization keys rather than embedded translated strings.
-- [ ] Search keywords and discoverability metadata.
-- [ ] Rust-to-WASM/TypeScript boundary for web editors and GitHub Pages consumers.
-- [ ] Shared fixtures across Rust and web representations.
-- [ ] Reference settings UI that consumes the presentation model without becoming authoritative for state.
+- [x] Stable category/group/order metadata using localization keys rather than embedded translated strings.
+- [x] Search keywords and discoverability metadata.
+- [x] Rust-to-WASM/TypeScript boundary for web editors and GitHub Pages consumers.
+- [x] Shared fixtures across Rust and web representations.
+- [x] Reference settings UI that consumes the presentation model without becoming authoritative for state.
+
+`settings-presentation` is a separate layer keyed by ordinary `SettingId`s. It carries stable localization keys, category/group membership, deterministic order, discoverability, and localized-search keys without introducing translated strings or UI-framework concepts into `settings-core`. Unknown or duplicate presentation entries fail closed, and observable ordering is independent of registration order.
+
+`settings-wasm` validates presentation entries against the canonical Rust settings registry and returns them in Rust-defined order. The browser wrapper remains an adapter over that session and ships TypeScript declarations; it does not duplicate validation, persistence, migration, or ordering semantics. The reference UI resolves localization keys, implements search/discoverability, and reads/writes values through the settings session rather than owning settings state.
+
+`fixtures/presentation/reference.json` is consumed directly by Rust acceptance tests and by the browser reference UI. Browser CI independently verifies its presentation/localization shape, then publishes that exact fixture with the generated WASM package and reference UI.
+
+Acceptance boundary: registration order cannot change presentation order; localization keys remain validated identifiers rather than translated text; presentation metadata cannot reference unknown settings; browser consumers receive the canonical Rust ordering through WASM; the shared fixture is validated from both Rust and JavaScript; and UI filtering never becomes a second source of truth for setting values.
 
 ## Slice 7 — Hardening and observability
 

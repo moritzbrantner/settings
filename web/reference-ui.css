@@ -1,0 +1,178 @@
+:root {
+  color-scheme: light dark;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  line-height: 1.5;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
+}
+
+.page-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 2rem;
+  align-items: end;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.eyebrow {
+  margin: 0 0 0.25rem;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.85rem;
+  opacity: 0.7;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin-top: 0;
+}
+
+h1 {
+  margin-bottom: 0.5rem;
+  font-size: clamp(2rem, 6vw, 3.5rem);
+  line-height: 1;
+}
+
+.page-header p:last-child {
+  margin-bottom: 0;
+  max-width: 62ch;
+  opacity: 0.78;
+}
+
+.filters {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.search-field {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 600;
+}
+
+input[type="search"],
+input[type="text"],
+select {
+  width: 100%;
+  min-height: 2.6rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+}
+
+.advanced-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.category {
+  padding-top: 2rem;
+}
+
+.category > h2 {
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.group + .group {
+  margin-top: 1.75rem;
+}
+
+.group > h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  opacity: 0.72;
+}
+
+.setting-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 320px);
+  gap: 1.25rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-top: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+}
+
+.setting-copy label,
+.setting-copy .setting-label {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-weight: 650;
+}
+
+.setting-description {
+  margin: 0;
+  opacity: 0.72;
+}
+
+.setting-meta {
+  margin-top: 0.35rem;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.78rem;
+  opacity: 0.55;
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.setting-control input[type="range"] {
+  min-width: 150px;
+}
+
+.setting-control output {
+  min-width: 2.5rem;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+button {
+  min-height: 2.3rem;
+  padding: 0.45rem 0.7rem;
+  border: 1px solid color-mix(in srgb, currentColor 24%, transparent);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+button:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+
+.empty-state,
+.status {
+  margin-top: 2rem;
+  opacity: 0.72;
+}
+
+@media (max-width: 720px) {
+  .page-header,
+  .setting-row {
+    grid-template-columns: 1fr;
+  }
+
+  .setting-control {
+    justify-content: flex-start;
+  }
+}

@@ -1,0 +1,14 @@
+[package]
+name = "settings-presentation"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Deterministic presentation metadata for settings consumers"
+
+[dependencies]
+serde.workspace = true
+settings-core = { path = "../settings-core" }
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
