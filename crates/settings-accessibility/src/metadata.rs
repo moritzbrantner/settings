@@ -7,9 +7,7 @@ use thiserror::Error;
 ///
 /// A setting may carry several tags; these are semantic facets rather than mutually exclusive UI
 /// categories.
-#[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
-)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AccessibilityTag {
     Motion,
@@ -25,9 +23,7 @@ pub enum AccessibilityTag {
 /// Importance when an application chooses to present accessibility options before normal
 /// navigation. Whether the application is actually in a first-launch/bootstrap flow remains a
 /// caller-owned decision.
-#[derive(
-    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize,
-)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum AccessibilityBootstrapPriority {
     Critical,
@@ -102,9 +98,7 @@ impl AccessibilityRegistry {
         self.metadata.get(id)
     }
 
-    pub fn iter(
-        &self,
-    ) -> impl Iterator<Item = (&SettingId, &AccessibilityPresentationMetadata)> {
+    pub fn iter(&self) -> impl Iterator<Item = (&SettingId, &AccessibilityPresentationMetadata)> {
         self.metadata.iter()
     }
 
