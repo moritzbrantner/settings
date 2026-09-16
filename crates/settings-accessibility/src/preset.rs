@@ -94,9 +94,9 @@ pub fn analyze_accessibility_preset(
             .effective_provenance(settings, id)
             .expect("registered settings always have effective provenance");
         let overwrites_explicit_user_choice = matches!(
-            current_preference_source,
+            current_preference_source.as_ref(),
             Some(OverrideSource::UserOverride)
-        ) && current_preference != *proposed;
+        ) && &current_preference != proposed;
 
         entries.push(AccessibilityPresetImpactEntry {
             id: id.clone(),
