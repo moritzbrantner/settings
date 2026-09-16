@@ -67,29 +67,14 @@ fn adapter_fixture_is_semantically_equivalent_to_direct_core_registration() {
     let state = SettingsState::new();
     let video_hdr = id("video.hdr");
     assert_eq!(
-        evaluate_availability(
-            &adapter_registry,
-            &state,
-            &adapter_capabilities,
-            &video_hdr,
-        )
-        .unwrap()
-        .status,
+        evaluate_availability(&adapter_registry, &state, &adapter_capabilities, &video_hdr,)
+            .unwrap()
+            .status,
         AvailabilityStatus::Available
     );
     assert_eq!(
-        evaluate_availability(
-            &adapter_registry,
-            &state,
-            &adapter_capabilities,
-            &video_hdr,
-        ),
-        evaluate_availability(
-            &direct_registry,
-            &state,
-            &direct_capabilities,
-            &video_hdr,
-        )
+        evaluate_availability(&adapter_registry, &state, &adapter_capabilities, &video_hdr,),
+        evaluate_availability(&direct_registry, &state, &direct_capabilities, &video_hdr,)
     );
 }
 
@@ -257,11 +242,7 @@ fn adapters_translate_changes_into_consumer_owned_commands_without_executing_the
 
     let mut registry = SettingsRegistry::new();
     let mut capabilities = CapabilityFacts::new();
-    for descriptor in [
-        graphics.descriptor(),
-        audio.descriptor(),
-        game.descriptor(),
-    ] {
+    for descriptor in [graphics.descriptor(), audio.descriptor(), game.descriptor()] {
         install_adapter_descriptor(&mut registry, &mut capabilities, &descriptor).unwrap();
     }
 
@@ -278,11 +259,7 @@ fn adapters_translate_changes_into_consumer_owned_commands_without_executing_the
         )
         .unwrap();
     changed
-        .set(
-            &registry,
-            &id("game.auto_pause"),
-            SettingValue::Bool(false),
-        )
+        .set(&registry, &id("game.auto_pause"), SettingValue::Bool(false))
         .unwrap();
 
     let changes = diff(&registry, &baseline, &changed);
