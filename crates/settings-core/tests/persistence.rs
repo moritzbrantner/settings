@@ -227,7 +227,10 @@ fn transient_overlays_do_not_replace_or_hide_durable_values_from_export() {
         state.effective_value(&registry, &setting),
         Some(&SettingValue::Integer(10))
     );
-    assert_eq!(state.override_value(&setting), Some(&SettingValue::Integer(65)));
+    assert_eq!(
+        state.override_value(&setting),
+        Some(&SettingValue::Integer(65))
+    );
 
     let exported = export_scope_json(
         &registry,
