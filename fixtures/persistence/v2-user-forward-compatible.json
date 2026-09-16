@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "scope": "user",
+  "overrides": {
+    "audio.master_volume": {
+      "type": "integer",
+      "value": 55
+    },
+    "future.accessibility.contrast_curve": {
+      "type": "choice",
+      "value": "adaptive"
+    }
+  }
+}
