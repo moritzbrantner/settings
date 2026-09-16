@@ -11,12 +11,20 @@ fn settings_hot_paths(criterion: &mut Criterion) {
         let workload = build_workload(size, 100);
         group.throughput(Throughput::Elements(size as u64));
 
-        group.bench_with_input(BenchmarkId::new("effective_scan", size), &size, |bencher, _| {
-            bencher.iter(|| black_box(scan_effective_values(black_box(&workload))));
-        });
-        group.bench_with_input(BenchmarkId::new("sparse_diff", size), &size, |bencher, _| {
-            bencher.iter(|| black_box(materialize_diff(black_box(&workload))));
-        });
+        group.bench_with_input(
+            BenchmarkId::new("effective_scan", size),
+            &size,
+            |bencher, _| {
+                bencher.iter(|| black_box(scan_effective_values(black_box(&workload))));
+            },
+        );
+        group.bench_with_input(
+            BenchmarkId::new("sparse_diff", size),
+            &size,
+            |bencher, _| {
+                bencher.iter(|| black_box(materialize_diff(black_box(&workload))));
+            },
+        );
         group.bench_with_input(
             BenchmarkId::new("presentation_materialization", size),
             &size,
