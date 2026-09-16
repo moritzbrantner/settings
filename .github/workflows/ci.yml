@@ -20,3 +20,19 @@ jobs:
       - run: cargo clippy --workspace --all-targets -- -D warnings
       - run: cargo fmt --all -- --check
       - run: RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
+      - name: Validate isolated hardening harnesses
+        run: |
+          cargo check --manifest-path fuzz/Cargo.toml --bins
+          cargo clippy --manifest-path benchmarks/Cargo.toml --all-targets -- -D warnings
+          cargo fmt --manifest-path fuzz/Cargo.toml --all -- --check
+          cargo fmt --manifest-path benchmarks/Cargo.toml --all -- --check
+      - name: Capture allocation evidence
+        run: |
+          mkdir -p target/evidence
+          cargo run --manifest-path benchmarks/Cargo.toml --bin allocation-evidence --quiet > target/evidence/settings-allocation.json
+          cat target/evidence/settings-allocation.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: settings-allocation-evidence
+          path: target/evidence/settings-allocation.json
+          if-no-files-found: error

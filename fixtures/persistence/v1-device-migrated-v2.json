@@ -1,0 +1,10 @@
+{
+  "schema_version": 2,
+  "scope": "device",
+  "overrides": {
+    "video.fullscreen": {
+      "type": "bool",
+      "value": true
+    }
+  }
+}

@@ -120,14 +120,24 @@ Acceptance boundary: registration order cannot change presentation order; locali
 
 ## Slice 7 — Hardening and observability
 
-- [ ] Property tests for registry/state invariants.
-- [ ] Fuzz persisted envelopes and migration inputs.
-- [ ] Deterministic benchmark workloads for large registries and change sets.
-- [ ] Allocation/materialization evidence for hot settings-screen paths.
-- [ ] Compatibility fixtures retained across schema versions.
-- [ ] Consumer conformance tests for adapter contracts.
+- [x] Property tests for registry/state invariants.
+- [x] Fuzz persisted envelopes and migration inputs.
+- [x] Deterministic benchmark workloads for large registries and change sets.
+- [x] Allocation/materialization evidence for hot settings-screen paths.
+- [x] Compatibility fixtures retained across schema versions.
+- [x] Consumer conformance tests for adapter contracts.
 
-Performance work should add representative benchmarks rather than wall-clock pass/fail thresholds in ordinary hosted CI.
+Property tests cover transient precedence independent of mutation order, durable default canonicalization, canonical scope round-trips, and directional diff symmetry.
+
+`fuzz/` is an isolated cargo-fuzz workspace whose targets exercise arbitrary persisted envelopes and forced v1 migration objects. CI compile-checks the targets on stable; longer fuzz campaigns remain explicit work rather than nondeterministic pull-request gates.
+
+`benchmarks/` is an isolated Criterion workspace with deterministic 100, 1,000, and 5,000-setting workloads for effective scans, sparse diffs, and presentation materialization. CI compiles and lints these workloads but intentionally does not gate on wall-clock timing.
+
+The allocation-evidence binary records allocation calls and requested bytes for a fixed 1,000-setting settings-screen workload and uploads its JSON output as a CI artifact. These figures are evidence, not allocator-specific pass/fail thresholds.
+
+Retained compatibility goldens lock v1-to-v2 canonical user/device migration output and v2 unknown-entry preservation. Adapter conformance tests exercise representative graphics, audio, and application consumers, requiring owned changes to map to consumer commands while unrelated changes remain ignored.
+
+Acceptance boundary: runtime crates do not depend on fuzz or benchmark tooling; property, compatibility, and consumer-conformance suites pass; fuzz/benchmark harnesses compile on stable; fixed-workload allocation evidence is produced; and ordinary CI does not depend on timing or allocator-count thresholds.
 
 ## Initial consumer targets
 
