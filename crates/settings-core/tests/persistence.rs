@@ -102,7 +102,10 @@ fn v1_migration_partitions_known_values_by_scope_and_marks_provenance() {
             .effective_provenance(&registry, &id("video.fullscreen")),
         Some(ValueProvenance::Migration { from_version: 1 })
     );
-    assert_eq!(device.state.override_value(&id("audio.master_volume")), None);
+    assert_eq!(
+        device.state.override_value(&id("audio.master_volume")),
+        None
+    );
     assert!(device.diagnostics.iter().any(|diagnostic| matches!(
         diagnostic,
         LoadDiagnostic::LegacyUnknownEntryDropped { id }
@@ -286,9 +289,7 @@ fn corrupt_v2_fixture_recovers_only_safe_values_and_preserves_safe_unknowns() {
         LoadDiagnostic::InvalidValue { id, .. } if id.as_str() == "video.quality"
     )));
     assert_eq!(
-        loaded
-            .state
-            .effective_value(&registry, &id("video.vsync")),
+        loaded.state.effective_value(&registry, &id("video.vsync")),
         Some(&SettingValue::Bool(true))
     );
     assert_eq!(loaded.preserved_entries.len(), 1);
