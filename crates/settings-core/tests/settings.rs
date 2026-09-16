@@ -196,14 +196,18 @@ fn compatible_scope_files_recover_valid_entries_and_preserve_unknown_ones() {
 
     let loaded = import_scope_json(&registry, SettingScope::Device, json).unwrap();
     assert_eq!(loaded.diagnostics.len(), 2);
-    assert!(loaded.diagnostics.iter().any(|diagnostic| matches!(
-        diagnostic,
-        LoadDiagnostic::UnknownSettingPreserved { .. }
-    )));
-    assert!(loaded.diagnostics.iter().any(|diagnostic| matches!(
-        diagnostic,
-        LoadDiagnostic::InvalidValue { .. }
-    )));
+    assert!(
+        loaded
+            .diagnostics
+            .iter()
+            .any(|diagnostic| matches!(diagnostic, LoadDiagnostic::UnknownSettingPreserved { .. }))
+    );
+    assert!(
+        loaded
+            .diagnostics
+            .iter()
+            .any(|diagnostic| matches!(diagnostic, LoadDiagnostic::InvalidValue { .. }))
+    );
     assert_eq!(loaded.preserved_entries.len(), 1);
     assert_eq!(
         loaded
