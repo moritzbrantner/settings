@@ -45,9 +45,7 @@ impl PreservedEntries {
     }
 
     pub fn iter(&self) -> impl Iterator<Item = (&str, &Value)> {
-        self.entries
-            .iter()
-            .map(|(id, value)| (id.as_str(), value))
+        self.entries.iter().map(|(id, value)| (id.as_str(), value))
     }
 }
 
@@ -59,16 +57,29 @@ pub struct MigrationRecord {
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum LoadDiagnostic {
-    UnknownSettingPreserved { id: SettingId },
-    InvalidValue { id: SettingId, reason: String },
-    CorruptValue { id: SettingId, reason: String },
-    InvalidIdentifier { raw_id: String, reason: String },
+    UnknownSettingPreserved {
+        id: SettingId,
+    },
+    InvalidValue {
+        id: SettingId,
+        reason: String,
+    },
+    CorruptValue {
+        id: SettingId,
+        reason: String,
+    },
+    InvalidIdentifier {
+        raw_id: String,
+        reason: String,
+    },
     ScopeMismatch {
         id: SettingId,
         expected: SettingScope,
         actual: SettingScope,
     },
-    LegacyUnknownEntryDropped { id: SettingId },
+    LegacyUnknownEntryDropped {
+        id: SettingId,
+    },
 }
 
 #[derive(Clone, Debug, PartialEq)]
