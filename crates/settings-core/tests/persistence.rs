@@ -152,21 +152,21 @@ fn one_state_exports_independent_user_device_and_save_snapshots() {
         &registry,
         &state,
         SettingScope::User,
-        &PreservedEntries::new(),
+        &PreservedEntries::new(SettingScope::User).unwrap(),
     )
     .unwrap();
     let device = export_scope_json(
         &registry,
         &state,
         SettingScope::Device,
-        &PreservedEntries::new(),
+        &PreservedEntries::new(SettingScope::Device).unwrap(),
     )
     .unwrap();
     let save = export_scope_json(
         &registry,
         &state,
         SettingScope::Save,
-        &PreservedEntries::new(),
+        &PreservedEntries::new(SettingScope::Save).unwrap(),
     )
     .unwrap();
 
@@ -191,13 +191,17 @@ fn one_state_exports_independent_user_device_and_save_snapshots() {
 }
 
 #[test]
-fn policy_command_line_and_session_sources_do_not_leak_into_durable_user_state() {
+fn transient_overlays_do_not_replace_or_hide_durable_values_from_export() {
     let registry = registry();
+    let setting = id("audio.master_volume");
     let mut state = SettingsState::new();
+    state
+        .set(&registry, &setting, SettingValue::Integer(65))
+        .unwrap();
     state
         .set_with_source(
             &registry,
-            &id("audio.master_volume"),
+            &setting,
             SettingValue::Integer(10),
             OverrideSource::Policy,
         )
@@ -219,16 +223,30 @@ fn policy_command_line_and_session_sources_do_not_leak_into_durable_user_state()
         )
         .unwrap();
 
+    assert_eq!(
+        state.effective_value(&registry, &setting),
+        Some(&SettingValue::Integer(10))
+    );
+    assert_eq!(state.override_value(&setting), Some(&SettingValue::Integer(65)));
+
     let exported = export_scope_json(
         &registry,
         &state,
         SettingScope::User,
-        &PreservedEntries::new(),
+        &PreservedEntries::new(SettingScope::User).unwrap(),
     )
     .unwrap();
-    assert!(!exported.contains("audio.master_volume"));
+    assert!(exported.contains("audio.master_volume"));
+    assert!(exported.contains("65"));
+    assert!(!exported.contains("10"));
     assert!(exported.contains("accessibility.subtitle_scale"));
     assert!(!exported.contains("accessibility.reduce_motion"));
+
+    let reloaded = import_scope_json(&registry, SettingScope::User, &exported).unwrap();
+    assert_eq!(
+        reloaded.state.effective_value(&registry, &setting),
+        Some(&SettingValue::Integer(65))
+    );
 }
 
 #[test]
@@ -263,6 +281,35 @@ fn unknown_v2_entries_survive_a_canonical_round_trip() {
     )
     .unwrap();
     assert_eq!(canonical_again, canonical);
+}
+
+#[test]
+fn preserved_unknown_entries_cannot_cross_scope_boundaries() {
+    let registry = registry();
+    let input = r#"{
+  "schema_version": 2,
+  "scope": "device",
+  "overrides": {
+    "future.renderer.option": { "type": "choice", "value": "future" }
+  }
+}"#;
+    let loaded = import_scope_json(&registry, SettingScope::Device, input).unwrap();
+    assert_eq!(loaded.preserved_entries.scope(), SettingScope::Device);
+
+    let error = export_scope_json(
+        &registry,
+        &loaded.state,
+        SettingScope::User,
+        &loaded.preserved_entries,
+    )
+    .unwrap_err();
+    assert!(matches!(
+        error,
+        PersistenceError::ScopeMismatch {
+            expected: SettingScope::User,
+            found: SettingScope::Device,
+        }
+    ));
 }
 
 #[test]
