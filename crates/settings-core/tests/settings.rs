@@ -1,7 +1,7 @@
 use settings_core::{
-    ApplyMode, LoadDiagnostic, PersistenceError, SettingDefinition, SettingId, SettingKind,
-    SettingScope, SettingValue, SettingsRegistry, SettingsState, ValidationError,
-    CURRENT_SCHEMA_VERSION, decode_json, diff, encode_json,
+    ApplyMode, CURRENT_SCHEMA_VERSION, LoadDiagnostic, PersistenceError, SettingDefinition,
+    SettingId, SettingKind, SettingScope, SettingValue, SettingsRegistry, SettingsState,
+    ValidationError, decode_json, diff, encode_json,
 };
 
 fn id(value: &str) -> SettingId {
@@ -89,7 +89,10 @@ fn validates_type_range_and_choice_before_mutation() {
             SettingValue::Integer(101),
         )
         .unwrap_err();
-    assert!(matches!(range_error, ValidationError::IntegerOutOfRange { .. }));
+    assert!(matches!(
+        range_error,
+        ValidationError::IntegerOutOfRange { .. }
+    ));
 
     let type_error = state
         .set(
@@ -107,7 +110,10 @@ fn validates_type_range_and_choice_before_mutation() {
             SettingValue::Choice("cinematic".into()),
         )
         .unwrap_err();
-    assert!(matches!(choice_error, ValidationError::InvalidChoice { .. }));
+    assert!(matches!(
+        choice_error,
+        ValidationError::InvalidChoice { .. }
+    ));
     assert_eq!(state.override_count(), 0);
 }
 
@@ -117,11 +123,7 @@ fn diffs_are_deterministic_and_keep_apply_semantics() {
     let before = SettingsState::new();
     let mut after = SettingsState::new();
     after
-        .set(
-            &registry,
-            &id("video.fullscreen"),
-            SettingValue::Bool(true),
-        )
+        .set(&registry, &id("video.fullscreen"), SettingValue::Bool(true))
         .unwrap();
     after
         .set(
@@ -144,11 +146,7 @@ fn persistence_round_trip_is_canonical_and_delta_only() {
     let registry = registry();
     let mut state = SettingsState::new();
     state
-        .set(
-            &registry,
-            &id("video.fullscreen"),
-            SettingValue::Bool(true),
-        )
+        .set(&registry, &id("video.fullscreen"), SettingValue::Bool(true))
         .unwrap();
 
     let encoded = encode_json(&state).unwrap();
@@ -226,11 +224,13 @@ fn non_finite_numbers_are_rejected() {
         .unwrap();
 
     let mut state = SettingsState::new();
-    assert!(state
-        .set(
-            &registry,
-            &id("camera.sensitivity"),
-            SettingValue::Number(f64::NAN),
-        )
-        .is_err());
+    assert!(
+        state
+            .set(
+                &registry,
+                &id("camera.sensitivity"),
+                SettingValue::Number(f64::NAN),
+            )
+            .is_err()
+    );
 }
