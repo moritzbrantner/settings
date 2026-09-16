@@ -8,6 +8,8 @@ mod state;
 
 pub use error::{PersistenceError, RegistryError, SettingIdError, ValidationError};
 pub use model::{ApplyMode, SettingDefinition, SettingId, SettingKind, SettingScope, SettingValue};
-pub use persistence::{CURRENT_SCHEMA_VERSION, LoadDiagnostic, LoadReport, decode_json, encode_json};
+pub use persistence::{
+    CURRENT_SCHEMA_VERSION, LoadDiagnostic, LoadReport, decode_json, encode_json,
+};
 pub use registry::SettingsRegistry;
 pub use state::{SettingChange, SettingsState, diff};
