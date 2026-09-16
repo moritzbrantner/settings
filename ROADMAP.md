@@ -53,14 +53,18 @@ Acceptance boundary: user/device/save snapshots can be stored independently and 
 
 ## Slice 3 — Presets and transactional application
 
-- [ ] Presets as named sets of ordinary setting values, never a second source of truth.
-- [ ] Preview/stage/apply/cancel transaction coordinator.
-- [ ] Revert plans for immediate settings when a staged group is cancelled.
-- [ ] Timed safety rollback primitive for risky display changes.
-- [ ] Section-level and global reset.
-- [ ] Change provenance and dirty-state queries.
+- [x] Presets as named sets of ordinary setting values, never a second source of truth.
+- [x] Preview/stage/apply/cancel transaction coordinator.
+- [x] Revert plans for immediate settings when a staged group is cancelled.
+- [x] Timed safety rollback primitive for risky display changes.
+- [x] Section-level and global reset.
+- [x] Change provenance and dirty-state queries.
 
-Example target: switching resolution/HDR can be previewed and automatically reverted unless confirmed.
+Section reset is expressed as `stage_reset_many` over identifiers supplied by the presentation/application layer; `settings-core` does not invent section/category ownership before the presentation-model slice. Global reset clears durable preferences while leaving policy, command-line, and session overlays intact.
+
+Example target: switching resolution/HDR can be staged and applied, wrapped in a timed confirmation guard, and deterministically reverted unless confirmed. Immediate settings such as volume can be previewed while editing and receive an explicit reverse change plan on cancel.
+
+Acceptance boundary: applying a preset is atomic and uses ordinary validated setting values with preset provenance; transactions never mutate their baseline; dirty-state detects durable, provenance, and transient-layer edits; cancel returns only immediate effects that consumers may need to reverse; commit returns deterministic value changes with before/after provenance; a preset can update the durable preference beneath an active policy without faking a runtime effect; and safety rollback uses caller-supplied monotonic ticks, cannot resolve while pending, and deterministically selects candidate or baseline only after confirmation or expiry.
 
 ## Slice 4 — Domain adapters
 
