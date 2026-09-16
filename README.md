@@ -20,6 +20,7 @@ Reusable user-facing settings foundation for games, editors, and applications.
 - deterministic presentation metadata using localization keys, category/group/order, search keys, and discoverability;
 - a validated WASM/browser boundary with TypeScript declarations and a shared Rust/web fixture;
 - a reference settings UI that consumes Rust-validated presentation metadata while keeping state in the settings session;
+- property, compatibility, consumer-conformance, fuzz-build, benchmark-build, and allocation-evidence hardening in CI;
 - Rust tests, formatting, clippy, documentation checks, and browser-distribution validation in CI.
 
 The core deliberately has no renderer, audio, input, UI-framework, filesystem, or platform dependency. `settings-adapters` never executes domain behavior; it only registers ordinary core definitions/capabilities and translates setting changes into command types owned by consumers. `settings-accessibility` annotates ordinary setting identifiers and analyzes normal presets without taking ownership of captions, narration, camera, input, haptics, audio, or gameplay behavior. `settings-presentation` owns only presentation metadata and deterministic ordering; localized strings and concrete widgets remain consumer-owned.
@@ -34,6 +35,8 @@ crates/settings-presentation   Localization-keyed presentation metadata
 crates/settings-wasm           Browser/WASM distribution boundary
 web/                           Typed browser API and reference UI
 fixtures/                      Cross-boundary deterministic fixtures
+benchmarks/                    Isolated Criterion workloads and allocation evidence
+fuzz/                          Isolated cargo-fuzz targets
 ```
 
 Run validation with:
@@ -45,4 +48,6 @@ cargo fmt --all -- --check
 RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
 ```
 
-See [ARCHITECTURE.md](ARCHITECTURE.md) for authority boundaries and [ROADMAP.md](ROADMAP.md) for the planned slices.
+CI additionally compile-checks the isolated fuzz and benchmark workspaces and uploads fixed-workload allocation evidence without using wall-clock or allocator-count thresholds as ordinary pass/fail gates.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for authority boundaries and [ROADMAP.md](ROADMAP.md) for the completed foundation slices.
