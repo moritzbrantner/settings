@@ -75,6 +75,56 @@ jobs:
             if (!fs.existsSync(path)) throw new Error(`missing ${path}`);
           }
           NODE
+      - name: Typecheck React UI consumer contract
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts \
+            typescript@5.9.3 react@19.2.0 @types/react@19.2.2 @moritzbrantner/ui@1.1.0
+          mkdir -p target/react-contract
+          cat > target/react-contract/contract.tsx <<'TSX'
+          import { SettingsBooleanField } from '../../dist/settings-react.js';
+          import type {
+            PresentationEntry,
+            SettingDefinition,
+            SettingValue,
+          } from '../../dist/settings-browser.js';
+
+          const definition = {
+            id: 'accessibility.reduce_motion',
+            kind: { type: 'bool' },
+            default: { type: 'bool', value: false },
+            scope: 'user',
+            apply_mode: 'immediate',
+          } as const satisfies SettingDefinition;
+          const presentation = {
+            id: definition.id,
+            metadata: {
+              label_key: 'settings.reduceMotion.title',
+              description_key: 'settings.reduceMotion.description',
+              category_key: 'settings.presentation',
+            },
+          } as const satisfies PresentationEntry;
+          const value = { type: 'bool', value: true } as const satisfies SettingValue;
+
+          const field = (
+            <SettingsBooleanField
+              definition={definition}
+              presentation={presentation}
+              value={value}
+              translate={(key) => key}
+              onValueChange={() => undefined}
+            />
+          );
+          void field;
+          TSX
+          ./node_modules/.bin/tsc \
+            --noEmit \
+            --strict \
+            --jsx react-jsx \
+            --module ESNext \
+            --target ES2022 \
+            --moduleResolution Bundler \
+            target/react-contract/contract.tsx
+          node -e "import('./dist/settings-react.js').then(({ SettingsBooleanField }) => { if (typeof SettingsBooleanField !== 'function') throw new Error('missing SettingsBooleanField export'); })"
       - uses: actions/upload-artifact@v4
         with:
           name: settings-browser-dist
