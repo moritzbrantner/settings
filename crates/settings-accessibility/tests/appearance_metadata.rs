@@ -44,10 +44,7 @@ fn canonical_appearance_settings_get_cross_cutting_accessibility_metadata() {
     );
 
     assert_eq!(
-        accessibility
-            .get(&ids.contrast)
-            .unwrap()
-            .bootstrap_priority,
+        accessibility.get(&ids.contrast).unwrap().bootstrap_priority,
         Some(AccessibilityBootstrapPriority::Critical)
     );
     assert_eq!(
