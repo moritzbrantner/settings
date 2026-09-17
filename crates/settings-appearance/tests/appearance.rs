@@ -64,7 +64,10 @@ fn installation_registers_mutually_exclusive_dimensions_as_normal_settings() {
             ]
         }
     );
-    assert_eq!(registry.get(&ids.night_mode).unwrap().kind, SettingKind::Bool);
+    assert_eq!(
+        registry.get(&ids.night_mode).unwrap().kind,
+        SettingKind::Bool
+    );
 }
 
 #[test]
