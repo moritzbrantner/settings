@@ -18,6 +18,8 @@ pub enum AccessibilityTag {
     Haptics,
     Input,
     TextPresentation,
+    ColorVision,
+    LightSensitivity,
 }
 
 /// Importance when an application chooses to present accessibility options before normal
