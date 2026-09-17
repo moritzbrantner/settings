@@ -4,6 +4,8 @@
 
 `settings-core` owns generic setting semantics only. Do not move renderer, audio, input-binding, gameplay, filesystem, cloud-sync, or UI-framework behavior into the core.
 
+`settings-appearance` owns reusable appearance preference choices and deterministic resolution against caller-supplied system facts only. Palettes, color transforms, operating-system theme detection, CSS, and renderer behavior stay in consumers.
+
 Consumer defaults are authoritative. Persisted state contains overrides, not copied defaults.
 
 ## Determinism and safety

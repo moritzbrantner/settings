@@ -17,6 +17,7 @@ Reusable user-facing settings foundation for games, editors, and applications.
 - thin domain-adapter contracts for graphics, audio, gameplay/application systems;
 - an opaque `input-bindings` composition descriptor that does not mirror binding semantics;
 - cross-cutting accessibility tags, bootstrap metadata, and preset-impact explanations;
+- deterministic appearance semantics for system/light/dark, normal/high/low contrast, color-vision assistance, and independent night/low-light mode;
 - deterministic presentation metadata using localization keys, category/group/order, search keys, and discoverability;
 - a validated WASM/browser boundary with TypeScript declarations and a shared Rust/web fixture;
 - an optional React presentation bridge backed by `@moritzbrantner/ui` stable primitives;
@@ -24,7 +25,9 @@ Reusable user-facing settings foundation for games, editors, and applications.
 - property, compatibility, consumer-conformance, fuzz-build, benchmark-build, and allocation-evidence hardening in CI;
 - Rust tests, formatting, clippy, documentation checks, and browser-distribution validation in CI.
 
-The core deliberately has no renderer, audio, input, UI-framework, filesystem, or platform dependency. `settings-adapters` never executes domain behavior; it only registers ordinary core definitions/capabilities and translates setting changes into command types owned by consumers. `settings-accessibility` annotates ordinary setting identifiers and analyzes normal presets without taking ownership of captions, narration, camera, input, haptics, audio, or gameplay behavior. `settings-presentation` owns only presentation metadata and deterministic ordering; localized strings and concrete widgets remain consumer-owned.
+The core deliberately has no renderer, audio, input, UI-framework, filesystem, or platform dependency. `settings-adapters` never executes domain behavior; it only registers ordinary core definitions/capabilities and translates setting changes into command types owned by consumers. `settings-accessibility` annotates ordinary setting identifiers and analyzes normal presets without taking ownership of captions, narration, camera, input, haptics, audio, or gameplay behavior. `settings-appearance` defines reusable appearance choices and resolves system-following preferences against caller-supplied platform facts, while palettes, color transforms, OS theme detection, and rendering remain consumer-owned. `settings-presentation` owns only presentation metadata and deterministic ordering; localized strings and concrete widgets remain consumer-owned.
+
+Appearance dimensions deliberately compose instead of overriding each other. A night/low-light preference does not silently force dark mode, high and low contrast are mutually exclusive values of one setting, and a color-vision assist mode requests an accessible palette rather than a simulated impairment filter. When a preference follows the system, callers supply the system color-scheme/contrast facts; unknown facts fail closed instead of being guessed.
 
 ## Browser consumers
 
@@ -52,6 +55,7 @@ The first supported control is `SettingsBooleanField`, which maps a boolean defi
 crates/settings-core           Canonical setting model and state semantics
 crates/settings-adapters       Thin domain composition contracts
 crates/settings-accessibility  Cross-cutting accessibility semantics
+crates/settings-appearance     Appearance preference and system-resolution semantics
 crates/settings-presentation   Localization-keyed presentation metadata
 crates/settings-wasm           Browser/WASM distribution boundary
 web/                           Typed browser API, optional React bridge, and reference UI
