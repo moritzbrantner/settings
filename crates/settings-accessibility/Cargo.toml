@@ -7,6 +7,7 @@ description = "Cross-cutting accessibility semantics for the settings foundation
 
 [dependencies]
 serde.workspace = true
+settings-appearance = { path = "../settings-appearance" }
 settings-core = { path = "../settings-core" }
 thiserror.workspace = true
 
