@@ -6,8 +6,8 @@
 
 use serde::{Deserialize, Serialize};
 use settings_core::{
-    ApplyMode, RegistryError, SettingDefinition, SettingId, SettingKind, SettingScope, SettingValue,
-    SettingsRegistry, SettingsState,
+    ApplyMode, RegistryError, SettingDefinition, SettingId, SettingKind, SettingScope,
+    SettingValue, SettingsRegistry, SettingsState,
 };
 use thiserror::Error;
 
@@ -287,8 +287,12 @@ pub fn read_appearance_preferences(
     let ids = AppearanceSettingIds::canonical();
 
     Ok(AppearancePreferences {
-        color_scheme: ColorSchemePreference::parse(read_choice(registry, state, &ids.color_scheme)?)
-            .ok_or_else(|| unsupported_choice(registry, state, &ids.color_scheme))?,
+        color_scheme: ColorSchemePreference::parse(read_choice(
+            registry,
+            state,
+            &ids.color_scheme,
+        )?)
+        .ok_or_else(|| unsupported_choice(registry, state, &ids.color_scheme))?,
         contrast: ContrastPreference::parse(read_choice(registry, state, &ids.contrast)?)
             .ok_or_else(|| unsupported_choice(registry, state, &ids.contrast))?,
         color_vision: ColorVisionAssistMode::parse(read_choice(
