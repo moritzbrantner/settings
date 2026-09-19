@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import {
   SettingsBooleanField,
   assertBooleanBinding,
-} from './settings-react.js';
+} from '../target/react-bridge/settings-react.js';
 
 function definition(id = 'accessibility.reduce_motion') {
   return {

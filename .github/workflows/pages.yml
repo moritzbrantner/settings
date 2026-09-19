@@ -27,17 +27,34 @@ jobs:
       - name: Validate browser modules and shared fixture
         run: |
           node --check web/settings-browser.js
-          node --check web/settings-react.js
           node --check web/settings-react.test.mjs
           node --check web/reference-ui.js
           node web/validate-reference-fixture.mjs
+      - name: Compile and test React UI bridge
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts \
+            typescript@5.9.3 react@19.2.0 react-dom@19.2.0 \
+            @types/react@19.2.2 @types/react-dom@19.2.2 @moritzbrantner/ui@1.1.0
+          rm -rf target/react-bridge
+          ./node_modules/.bin/tsc \
+            --declaration \
+            --outDir target/react-bridge \
+            --strict \
+            --jsx react-jsx \
+            --module ESNext \
+            --target ES2022 \
+            --moduleResolution Bundler \
+            --skipLibCheck \
+            web/settings-react.ts
+          node --check target/react-bridge/settings-react.js
+          node --test web/settings-react.test.mjs
       - name: Assemble browser distribution
         run: |
           cp web/browser-package.json dist/package.json
           cp web/settings-browser.js dist/settings-browser.js
           cp web/settings-browser.d.ts dist/settings-browser.d.ts
-          cp web/settings-react.js dist/settings-react.js
-          cp web/settings-react.d.ts dist/settings-react.d.ts
+          cp target/react-bridge/settings-react.js dist/settings-react.js
+          cp target/react-bridge/settings-react.d.ts dist/settings-react.d.ts
           cp web/index.html dist/index.html
           cp web/reference-ui.js dist/reference-ui.js
           cp web/reference-ui.css dist/reference-ui.css
@@ -78,10 +95,6 @@ jobs:
           NODE
       - name: Validate React UI consumer contract
         run: |
-          npm install --no-save --package-lock=false --ignore-scripts \
-            typescript@5.9.3 react@19.2.0 react-dom@19.2.0 \
-            @types/react@19.2.2 @types/react-dom@19.2.2 @moritzbrantner/ui@1.1.0
-          node --test web/settings-react.test.mjs
           mkdir -p target/react-contract
           cat > target/react-contract/contract.tsx <<'TSX'
           import { SettingsBooleanField } from '../../dist/settings-react.js';

@@ -1,5 +1,27 @@
-import { createElement, useId } from 'react';
-import { ToggleSetting } from '@moritzbrantner/ui/stable';
+import { createElement, useId, type ReactElement, type ReactNode } from 'react';
+import { ToggleSetting, type ToggleSettingProps } from '@moritzbrantner/ui/stable';
+import type {
+  PresentationEntry,
+  SettingDefinition,
+  SettingValue,
+} from './settings-browser.js';
+
+export type SettingsLocalize = (key: string) => ReactNode;
+
+type BooleanDefinition = SettingDefinition & { kind: { type: 'bool' } };
+type BooleanValue = Extract<SettingValue, { type: 'bool' }>;
+
+export interface SettingsBooleanFieldProps
+  extends Omit<
+    ToggleSettingProps,
+    'title' | 'description' | 'checked' | 'defaultChecked' | 'onCheckedChange'
+  > {
+  definition: BooleanDefinition;
+  presentation: PresentationEntry;
+  value: BooleanValue;
+  localize: SettingsLocalize;
+  onValueChange: (checked: boolean) => void;
+}
 
 export function SettingsBooleanField({
   definition,
@@ -13,7 +35,7 @@ export function SettingsBooleanField({
   className,
   switchProps,
   ...props
-}) {
+}: SettingsBooleanFieldProps): ReactElement {
   assertBooleanBinding(definition, presentation, value);
 
   const generatedId = useId();
@@ -46,7 +68,11 @@ export function SettingsBooleanField({
   });
 }
 
-export function assertBooleanBinding(definition, presentation, value) {
+export function assertBooleanBinding(
+  definition: SettingDefinition,
+  presentation: PresentationEntry,
+  value: SettingValue,
+): asserts definition is BooleanDefinition {
   if (!definition || definition.kind?.type !== 'bool') {
     throw new TypeError('SettingsBooleanField requires a bool setting definition');
   }
