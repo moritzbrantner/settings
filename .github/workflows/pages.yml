@@ -8,7 +8,8 @@ on:
 
 concurrency:
   group: browser-distribution-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a publication midway on main; superseded pull request runs may go.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -31,6 +32,10 @@ jobs:
           node --check web/settings-react.test.mjs
           node --check web/reference-ui.js
           node web/validate-reference-fixture.mjs
+      - name: Test forward-only distribution publisher
+        run: |
+          node --check scripts/publish-git-dist.mjs
+          node --test scripts/publish-git-dist.test.mjs
       - name: Assemble browser distribution
         run: |
           cp web/browser-package.json dist/package.json
@@ -134,8 +139,28 @@ jobs:
           path: dist
           if-no-files-found: error
 
+  prepare:
+    if: github.event_name == 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: settings-browser-dist
+          path: dist
+      - name: Prepare browser distribution commit (dry run)
+        run: |
+          set -euo pipefail
+          node scripts/publish-git-dist.mjs --dist dist --source "$SOURCE_SHA" > git-dist.json
+          { echo '```json'; cat git-dist.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+
   publish:
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -146,21 +171,10 @@ jobs:
         with:
           name: settings-browser-dist
           path: dist
-      - name: Publish generated browser distribution
-        env:
-          SOURCE_SHA: ${{ github.sha }}
+      - name: Publish browser distribution commit (forward-only)
         run: |
           set -euo pipefail
-          publish_dir="$(mktemp -d)"
-          cp -R dist/. "$publish_dir/"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout --orphan browser-dist
-          git rm -rf --ignore-unmatch .
-          git clean -fdx
-          cp -R "$publish_dir/." .
-          touch .nojekyll
-          printf '%s\n' "$SOURCE_SHA" > SOURCE_SHA
-          git add -A
-          git commit -m "Publish browser distribution for $SOURCE_SHA"
-          git push --force origin HEAD:browser-dist
+          node scripts/publish-git-dist.mjs --dist dist --source "$SOURCE_SHA" --push > git-dist.json
+          { echo '```json'; cat git-dist.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          SOURCE_SHA: ${{ github.sha }}
