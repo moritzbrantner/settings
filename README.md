@@ -23,7 +23,7 @@ Reusable user-facing settings foundation for games, editors, and applications.
 - an optional React presentation bridge backed by `@moritzbrantner/ui` stable primitives;
 - a reference settings UI that consumes Rust-validated presentation metadata while keeping state in the settings session;
 - property, compatibility, consumer-conformance, fuzz-build, benchmark-build, and allocation-evidence hardening in CI;
-- Rust tests, formatting, clippy, documentation checks, and browser-distribution validation in CI.
+- Rust tests, formatting, clippy, documentation checks, and browser-distribution validation in CI, with forward-only publication of the `browser-dist` branch.
 
 The core deliberately has no renderer, audio, input, UI-framework, filesystem, or platform dependency. `settings-adapters` never executes domain behavior; it only registers ordinary core definitions/capabilities and translates setting changes into command types owned by consumers. `settings-accessibility` annotates ordinary setting identifiers and analyzes normal presets without taking ownership of captions, narration, camera, input, haptics, audio, or gameplay behavior. `settings-appearance` defines reusable appearance choices and resolves system-following preferences against caller-supplied platform facts, while palettes, color transforms, OS theme detection, and rendering remain consumer-owned. `settings-presentation` owns only presentation metadata and deterministic ordering; localized strings and concrete widgets remain consumer-owned.
 
@@ -40,6 +40,18 @@ bun add @moritzbrantner/settings-browser@github:moritzbrantner/settings#<browser
 ```
 
 That keeps application builds content-addressed while allowing an intentional dependency update when a newer settings foundation is accepted.
+
+### Distribution branch
+
+The `Browser distribution` workflow (`.github/workflows/pages.yml`) builds and validates the package, then `scripts/publish-git-dist.mjs` publishes it to `browser-dist` after every push to `main`:
+
+- The branch only fast-forwards. Each new commit has the previous `browser-dist` tip as its parent and is pushed without force, so every commit a consumer has pinned stays reachable.
+- A new commit is made only when the package contents change. A source commit that leaves the built package byte-identical publishes nothing, and the previous commit stays current.
+- Each commit holds the package at the repository root, plus `.nojekyll` and a `SOURCE_SHA` file naming the source commit that produced those contents. The commit message names the same source commit and links to it.
+
+Pull requests run the publisher's unit tests and a dry run that prepares the next commit against the current tip without pushing; the run summary shows the resulting commit and dependency specifier. To prepare the same commit locally, assemble `dist/` as the workflow does and run `node scripts/publish-git-dist.mjs --dist dist`; add `--push` only to publish.
+
+Before forward-only publishing, every publication replaced `browser-dist` with a new unconnected commit. Only the last of those commits (`0da81df`) is part of the branch history; commits pinned from earlier publications are not reachable from any branch and should be re-pinned to a current `browser-dist` commit.
 
 ### React UI bridge
 
