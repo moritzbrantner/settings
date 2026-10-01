@@ -6,7 +6,7 @@ How work reaches the coding agents. A task is one GitHub issue that one agent tu
 
 | Agent | Does |
 | --- | --- |
-| Claude Opus | Orchestrates (`/orchestrate`). Turns drafts into ready specs, writes new specs from the open roadmap issues (the Settings Playground roadmap #21 and its sub-issues) and consumer requests (for example #20 from `moritzbrantner/mmorpg`), reviews PRs against their spec and merges them. Implements critical-path and cross-cutting core work itself (`agent:opus`). |
+| Claude Opus | Orchestrates (`/orchestrate`): classifies every open issue for Opus, Sonnet or Sol, turns drafts into ready specs, writes new specs from the open roadmap issues (the Settings Playground roadmap #21 and its sub-issues) and consumer requests (for example #20 from `moritzbrantner/mmorpg`), reviews PRs against their spec and merges them. Implements critical-path and cross-cutting core work itself (`agent:opus`). |
 | ChatGPT Sol | Implements narrow, technically deep `agent:sol` tasks via the Codex `implementer-loop` skill. The spec should settle authority, schema/API formats and scope so Sol can spend depth on correctness rather than redesigning adjacent systems. Runs occasionally, separately from `/orchestrate`, through a backlog of up to three tasks that nothing else waits on. |
 | Claude Sonnet | Implements `agent:sonnet` tasks: presentation, web/reference UI, docs, mechanical follow-ups. |
 | GitHub Actions | The full deterministic gate on every PR (`ci.yml`: Rust tests, Clippy, rustfmt, rustdoc, fuzz/benchmark harness checks, allocation evidence; `pages.yml`: WASM build, browser modules, shared fixture and installable package validation). |
