@@ -19,7 +19,9 @@ How work reaches the coding agents. A task is one GitHub issue that one agent tu
 - `spec:ready`: checked and implementable.
 - `spec:needs-input`: blocked on a question for the owner, asked in a comment.
 - `agent:opus`, `agent:sol`, `agent:sonnet`: the intended implementer.
-- `in-progress`: an implementer has started; the PR will reference the issue.
+- `in-progress`: an implementer has started; the PR will reference the issue. It only marks a started task: the `agent:*` label partitions issues, so the loop driver (Opus/Sonnet) and Sol never pick up the same issue.
+
+The loop driver clears a stale `in-progress` from `agent:opus` and `agent:sonnet` issues that have no open PR and no live agent. It never touches `in-progress` on `agent:sol` issues; it reports one that has no PR or branch push after 48 hours.
 
 ## Picking up a task (implementers)
 
