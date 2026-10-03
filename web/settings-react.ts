@@ -10,6 +10,12 @@ export type SettingsLocalize = (key: string) => ReactNode;
 
 type BooleanDefinition = SettingDefinition & { kind: { type: 'bool' } };
 type BooleanValue = Extract<SettingValue, { type: 'bool' }>;
+type SwitchProps = NonNullable<ToggleSettingProps['switchProps']>;
+// Plain JavaScript callers can still pass bridge-owned keys; strip them at runtime.
+type UntrustedSwitchProps = SwitchProps &
+  Partial<
+    Pick<ToggleSettingProps, 'id' | 'checked' | 'defaultChecked' | 'disabled' | 'onCheckedChange'>
+  >;
 
 export interface SettingsBooleanFieldProps
   extends Omit<
@@ -47,10 +53,13 @@ export function SettingsBooleanField({
     disabled: _switchDisabled,
     onCheckedChange: _switchOnCheckedChange,
     ...safeSwitchProps
-  } = switchProps ?? {};
+  }: UntrustedSwitchProps = switchProps ?? {};
   const metadata = presentation.metadata;
 
-  return createElement(ToggleSetting, {
+  const fieldProps: ToggleSettingProps & {
+    'data-setting-id': string;
+    'data-setting-kind': 'bool';
+  } = {
     ...props,
     id: resolvedId,
     title: localize(metadata.label_key),
@@ -65,7 +74,9 @@ export function SettingsBooleanField({
     switchProps: safeSwitchProps,
     'data-setting-id': definition.id,
     'data-setting-kind': 'bool',
-  });
+  };
+
+  return createElement(ToggleSetting, fieldProps);
 }
 
 export function assertBooleanBinding(
