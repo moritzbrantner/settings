@@ -1,31 +1,22 @@
-import type * as React from 'react';
-import type { ToggleSettingProps } from '@moritzbrantner/ui/stable';
-import type {
-  PresentationEntry,
-  SettingDefinition,
-  SettingValue,
-} from './settings-browser.js';
-
-export type SettingsLocalize = (key: string) => React.ReactNode;
-
-export interface SettingsBooleanFieldProps
-  extends Omit<
-    ToggleSettingProps,
-    'title' | 'description' | 'checked' | 'defaultChecked' | 'onCheckedChange'
-  > {
-  definition: SettingDefinition & { kind: { type: 'bool' } };
-  presentation: PresentationEntry;
-  value: Extract<SettingValue, { type: 'bool' }>;
-  localize: SettingsLocalize;
-  onValueChange: (checked: boolean) => void;
+import { type ReactElement, type ReactNode } from 'react';
+import { type ToggleSettingProps } from '@moritzbrantner/ui/stable';
+import type { PresentationEntry, SettingDefinition, SettingValue } from './settings-browser.js';
+export type SettingsLocalize = (key: string) => ReactNode;
+type BooleanDefinition = SettingDefinition & {
+    kind: {
+        type: 'bool';
+    };
+};
+type BooleanValue = Extract<SettingValue, {
+    type: 'bool';
+}>;
+export interface SettingsBooleanFieldProps extends Omit<ToggleSettingProps, 'title' | 'description' | 'checked' | 'defaultChecked' | 'onCheckedChange'> {
+    definition: BooleanDefinition;
+    presentation: PresentationEntry;
+    value: BooleanValue;
+    localize: SettingsLocalize;
+    onValueChange: (checked: boolean) => void;
 }
-
-export function SettingsBooleanField(
-  props: SettingsBooleanFieldProps,
-): React.ReactElement;
-
-export function assertBooleanBinding(
-  definition: SettingDefinition,
-  presentation: PresentationEntry,
-  value: SettingValue,
-): asserts definition is SettingDefinition & { kind: { type: 'bool' } };
+export declare function SettingsBooleanField({ definition, presentation, value, localize, onValueChange, disabled, detail, id, className, switchProps, ...props }: SettingsBooleanFieldProps): ReactElement;
+export declare function assertBooleanBinding(definition: SettingDefinition, presentation: PresentationEntry, value: SettingValue): asserts definition is BooleanDefinition;
+export {};
