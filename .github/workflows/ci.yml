@@ -12,7 +12,7 @@ jobs:
   rust:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dtolnay/rust-toolchain@stable
         with:
           components: rustfmt, clippy
@@ -31,7 +31,7 @@ jobs:
           mkdir -p target/evidence
           cargo run --manifest-path benchmarks/Cargo.toml --bin allocation-evidence --quiet > target/evidence/settings-allocation.json
           cat target/evidence/settings-allocation.json
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: settings-allocation-evidence
           path: target/evidence/settings-allocation.json
