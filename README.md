@@ -61,6 +61,22 @@ The first supported control is `SettingsBooleanField`, which maps a boolean defi
 
 `react` and `@moritzbrantner/ui` are optional peer dependencies so browser-only consumers of the core WASM adapter do not pull in the UI stack.
 
+### Staging, provenance and availability
+
+`BrowserSettingsSession` keeps a committed and a staged state. `set`, `reset`, `resetMany` and `resetAll` commit directly (and replace any staged value), so consumers that never stage see the previous behavior. `stageSet`, `stageResetMany` (section reset) and `stageResetAll` (global reset) change only the staged state until `applyStaged` or `cancelStaged`; both return deterministic value-change records with apply mode and before/after provenance. `settingStates()` reports, per setting, the staged and committed values, provenance, whether a durable override exists, whether it is staged, and availability evaluated in Rust against the capability facts passed to `setCapabilities`. Resets remove overrides; they never copy defaults.
+
+## Settings Playground
+
+`web/playground/` is a separate example application, the realistic dogfooding consumer next to the small reference UI. It imports only `@moritzbrantner/settings-browser` (resolved to the package assembled from this commit) and `@moritzbrantner/ui` stable primitives, pinned to a `ui` commit as a git dependency. It loads `fixtures/presentation/playground.json` at runtime as `playground-settings.json` and covers every setting kind with exact numeric entry, category navigation and search, scope/apply-mode/provenance/modified state, availability reasons, Apply/Cancel, restart/reconnect notices and per-setting, section and global reset.
+
+```bash
+cd web/playground
+bun install --frozen-lockfile
+bun run dev                          # wasm-pack build + Vite dev server
+bun run serve:e2e                    # production build served at http://127.0.0.1:4317/
+bunx playwright test --workers=1     # browser journeys (starts serve:e2e)
+```
+
 ## Workspace
 
 ```text
@@ -71,6 +87,7 @@ crates/settings-appearance     Appearance preference and system-resolution seman
 crates/settings-presentation   Localization-keyed presentation metadata
 crates/settings-wasm           Browser/WASM distribution boundary
 web/                           Typed browser API, optional React bridge, and reference UI
+web/playground/                Settings Playground example application
 fixtures/                      Cross-boundary deterministic fixtures
 benchmarks/                    Isolated Criterion workloads and allocation evidence
 fuzz/                          Isolated cargo-fuzz targets

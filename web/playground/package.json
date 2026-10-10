@@ -1,0 +1,36 @@
+{
+  "name": "@moritzbrantner/settings-playground",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Settings Playground: a realistic browser consumer of @moritzbrantner/settings-browser",
+  "type": "module",
+  "scripts": {
+    "build:browser-package": "node ./scripts/build-browser-package.mjs",
+    "build": "bun run build:browser-package && vite build",
+    "check-types": "tsc --noEmit -p tsconfig.json",
+    "dev": "bun run build:browser-package && vite",
+    "preview": "vite preview --host 127.0.0.1 --port 4317 --strictPort",
+    "serve:e2e": "bun run build && bun run preview",
+    "test:architecture": "node --test architecture.test.mjs ../reference-ui-unchanged.test.mjs",
+    "test:e2e": "playwright test --workers=1"
+  },
+  "dependencies": {
+    "@moritzbrantner/ui": "git+https://github.com/moritzbrantner/ui.git#35ea57483456d4b6ecf233c8dae5a6e4eba5c661",
+    "react": "19.2.0",
+    "react-dom": "19.2.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.1",
+    "@tailwindcss/vite": "4.1.14",
+    "@types/node": "24.10.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "@vitejs/plugin-react": "5.1.0",
+    "tailwindcss": "4.1.14",
+    "typescript": "5.9.3",
+    "vite": "7.2.2"
+  },
+  "trustedDependencies": [
+    "@moritzbrantner/ui"
+  ]
+}

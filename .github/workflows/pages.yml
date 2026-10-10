@@ -31,6 +31,7 @@ jobs:
           node --check web/settings-react.test.mjs
           node --check web/reference-ui.js
           node web/validate-reference-fixture.mjs
+          node --test web/reference-ui-unchanged.test.mjs web/playground/architecture.test.mjs
       - name: Compile and test React UI bridge
         run: |
           npm install --no-save --package-lock=false --ignore-scripts \
@@ -151,6 +152,44 @@ jobs:
           name: settings-browser-dist
           path: dist
           if-no-files-found: error
+
+  playground:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      # Reuse the assembled installable package (adapter, declarations and WASM) from `build`.
+      SETTINGS_BROWSER_DIST: ${{ github.workspace }}/dist
+    defaults:
+      run:
+        working-directory: web/playground
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          name: settings-browser-dist
+          path: dist
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - name: Type-check and build the Settings Playground
+        run: |
+          bun run build:browser-package
+          bun run check-types
+          bunx vite build
+      - run: bunx playwright install --with-deps chromium
+      - name: Settings Playground browser journeys
+        run: bunx playwright test --workers=1
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: settings-playground-playwright-report
+          path: |
+            web/playground/playwright-report
+            web/playground/test-results
+          if-no-files-found: ignore
 
   prepare:
     if: github.event_name == 'pull_request'
