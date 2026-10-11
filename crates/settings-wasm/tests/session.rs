@@ -301,7 +301,9 @@ fn availability_uses_staged_dependencies_across_scopes_in_both_directions() {
     assert_requires_true(&session, "video.advanced", "profile.advanced");
     assert_requires_true(&session, "profile.exclusive", "video.exclusive");
 
-    session.stage_set_json("profile.advanced", BOOL_TRUE).unwrap();
+    session
+        .stage_set_json("profile.advanced", BOOL_TRUE)
+        .unwrap();
     // The user preference is not committed, but the device control is already available.
     assert_eq!(values(&session)["profile.advanced"]["value"], false);
     assert_eq!(state(&session, "profile.advanced")["staged"], true);
@@ -314,7 +316,9 @@ fn availability_uses_staged_dependencies_across_scopes_in_both_directions() {
         "default"
     );
 
-    session.stage_set_json("video.exclusive", BOOL_TRUE).unwrap();
+    session
+        .stage_set_json("video.exclusive", BOOL_TRUE)
+        .unwrap();
     assert_eq!(values(&session)["video.exclusive"]["value"], false);
     assert_eq!(
         state(&session, "profile.exclusive")["availability"]["status"],
@@ -330,8 +334,12 @@ fn availability_uses_staged_dependencies_across_scopes_in_both_directions() {
 #[test]
 fn cross_scope_availability_tracks_apply_scoped_reset_and_global_reset() {
     let mut session = cross_scope_session();
-    session.stage_set_json("profile.advanced", BOOL_TRUE).unwrap();
-    session.stage_set_json("video.exclusive", BOOL_TRUE).unwrap();
+    session
+        .stage_set_json("profile.advanced", BOOL_TRUE)
+        .unwrap();
+    session
+        .stage_set_json("video.exclusive", BOOL_TRUE)
+        .unwrap();
     session.apply_staged_json().unwrap();
 
     assert_eq!(
@@ -352,8 +360,7 @@ fn cross_scope_availability_tracks_apply_scoped_reset_and_global_reset() {
     );
 
     // Scoped exports must not mix in a dependency from another scope.
-    let user: Value =
-        serde_json::from_str(&session.export_scope_json("user").unwrap()).unwrap();
+    let user: Value = serde_json::from_str(&session.export_scope_json("user").unwrap()).unwrap();
     let device: Value =
         serde_json::from_str(&session.export_scope_json("device").unwrap()).unwrap();
     assert!(user["overrides"].get("profile.advanced").is_some());
@@ -386,10 +393,7 @@ fn cross_scope_availability_tracks_apply_scoped_reset_and_global_reset() {
         state(&session, "profile.advanced")["provenance"]["type"],
         "default"
     );
-    assert_eq!(
-        state(&session, "video.exclusive")["overridden"],
-        false
-    );
+    assert_eq!(state(&session, "video.exclusive")["overridden"], false);
     for scope in ["user", "device"] {
         let exported: Value =
             serde_json::from_str(&session.export_scope_json(scope).unwrap()).unwrap();
