@@ -233,3 +233,175 @@ fn setting_states_follow_registry_order_not_registration_order() {
         .collect();
     assert_eq!(ids, ["audio.volume", "video.hdr", "video.mode"]);
 }
+
+const BOOL_TRUE: &str = r#"{"type":"bool","value":true}"#;
+
+fn cross_scope_session() -> SessionCore {
+    let definitions = json!([
+        {
+            "id": "profile.advanced",
+            "kind": { "type": "bool" },
+            "default": { "type": "bool", "value": false },
+            "scope": "user",
+            "apply_mode": "apply"
+        },
+        {
+            "id": "video.advanced",
+            "kind": { "type": "bool" },
+            "default": { "type": "bool", "value": false },
+            "scope": "device",
+            "apply_mode": "apply",
+            "availability": {
+                "condition": {
+                    "op": "setting_equals",
+                    "id": "profile.advanced",
+                    "value": { "type": "bool", "value": true }
+                },
+                "when_unavailable": "disable"
+            }
+        },
+        {
+            "id": "video.exclusive",
+            "kind": { "type": "bool" },
+            "default": { "type": "bool", "value": false },
+            "scope": "device",
+            "apply_mode": "apply"
+        },
+        {
+            "id": "profile.exclusive",
+            "kind": { "type": "bool" },
+            "default": { "type": "bool", "value": false },
+            "scope": "user",
+            "apply_mode": "apply",
+            "availability": {
+                "condition": {
+                    "op": "setting_equals",
+                    "id": "video.exclusive",
+                    "value": { "type": "bool", "value": true }
+                },
+                "when_unavailable": "disable"
+            }
+        }
+    ]);
+    SessionCore::new(&definitions.to_string()).expect("cross-scope definitions register")
+}
+
+fn assert_requires_true(session: &SessionCore, target: &str, dependency: &str) {
+    let availability = &state(session, target)["availability"];
+    assert_eq!(availability["status"], "disabled");
+    assert_eq!(availability["reasons"][0]["type"], "setting_value_mismatch");
+    assert_eq!(availability["reasons"][0]["id"], dependency);
+    assert_eq!(availability["reasons"][0]["expected"]["value"], true);
+    assert_eq!(availability["reasons"][0]["actual"]["value"], false);
+}
+
+#[test]
+fn availability_uses_staged_dependencies_across_scopes_in_both_directions() {
+    let mut session = cross_scope_session();
+    assert_requires_true(&session, "video.advanced", "profile.advanced");
+    assert_requires_true(&session, "profile.exclusive", "video.exclusive");
+
+    session.stage_set_json("profile.advanced", BOOL_TRUE).unwrap();
+    // The user preference is not committed, but the device control is already available.
+    assert_eq!(values(&session)["profile.advanced"]["value"], false);
+    assert_eq!(state(&session, "profile.advanced")["staged"], true);
+    assert_eq!(
+        state(&session, "video.advanced")["availability"]["status"],
+        "available"
+    );
+    assert_eq!(
+        state(&session, "video.advanced")["provenance"]["type"],
+        "default"
+    );
+
+    session.stage_set_json("video.exclusive", BOOL_TRUE).unwrap();
+    assert_eq!(values(&session)["video.exclusive"]["value"], false);
+    assert_eq!(
+        state(&session, "profile.exclusive")["availability"]["status"],
+        "available"
+    );
+
+    session.cancel_staged_json().unwrap();
+    assert!(!session.has_staged_changes());
+    assert_requires_true(&session, "video.advanced", "profile.advanced");
+    assert_requires_true(&session, "profile.exclusive", "video.exclusive");
+}
+
+#[test]
+fn cross_scope_availability_tracks_apply_scoped_reset_and_global_reset() {
+    let mut session = cross_scope_session();
+    session.stage_set_json("profile.advanced", BOOL_TRUE).unwrap();
+    session.stage_set_json("video.exclusive", BOOL_TRUE).unwrap();
+    session.apply_staged_json().unwrap();
+
+    assert_eq!(
+        state(&session, "video.advanced")["availability"]["status"],
+        "available"
+    );
+    assert_eq!(
+        state(&session, "profile.exclusive")["availability"]["status"],
+        "available"
+    );
+    assert_eq!(
+        state(&session, "profile.advanced")["provenance"]["type"],
+        "user_override"
+    );
+    assert_eq!(
+        state(&session, "video.exclusive")["provenance"]["type"],
+        "user_override"
+    );
+
+    // Scoped exports must not mix in a dependency from another scope.
+    let user: Value =
+        serde_json::from_str(&session.export_scope_json("user").unwrap()).unwrap();
+    let device: Value =
+        serde_json::from_str(&session.export_scope_json("device").unwrap()).unwrap();
+    assert!(user["overrides"].get("profile.advanced").is_some());
+    assert!(user["overrides"].get("video.exclusive").is_none());
+    assert!(device["overrides"].get("video.exclusive").is_some());
+    assert!(device["overrides"].get("profile.advanced").is_none());
+
+    session
+        .stage_reset_many_json(r#"["profile.advanced"]"#)
+        .unwrap();
+    assert_eq!(values(&session)["profile.advanced"]["value"], true);
+    assert_requires_true(&session, "video.advanced", "profile.advanced");
+    assert_eq!(
+        state(&session, "profile.exclusive")["availability"]["status"],
+        "available"
+    );
+    session.cancel_staged_json().unwrap();
+    assert_eq!(
+        state(&session, "video.advanced")["availability"]["status"],
+        "available"
+    );
+
+    session.stage_reset_all();
+    assert_eq!(values(&session)["video.exclusive"]["value"], true);
+    assert_requires_true(&session, "video.advanced", "profile.advanced");
+    assert_requires_true(&session, "profile.exclusive", "video.exclusive");
+    session.apply_staged_json().unwrap();
+    assert!(!session.has_staged_changes());
+    assert_eq!(
+        state(&session, "profile.advanced")["provenance"]["type"],
+        "default"
+    );
+    assert_eq!(
+        state(&session, "video.exclusive")["overridden"],
+        false
+    );
+    for scope in ["user", "device"] {
+        let exported: Value =
+            serde_json::from_str(&session.export_scope_json(scope).unwrap()).unwrap();
+        assert!(exported["overrides"].as_object().unwrap().is_empty());
+    }
+
+    // The immediate reset API also updates the aggregate staged availability.
+    session.set_json("profile.advanced", BOOL_TRUE).unwrap();
+    assert_eq!(
+        state(&session, "video.advanced")["availability"]["status"],
+        "available"
+    );
+    session.reset("profile.advanced").unwrap();
+    assert_requires_true(&session, "video.advanced", "profile.advanced");
+}
