@@ -164,6 +164,15 @@ impl SessionCore {
     }
 
     pub fn setting_states_json(&self) -> Result<String, String> {
+        // Dependencies may reference settings from any scope. Combine the staged layers
+        // only for availability evaluation; values, provenance and persistence stay scoped.
+        let mut staged_for_availability = SettingsState::new();
+        for scoped_state in self.staged.values() {
+            staged_for_availability
+                .merge_from(&self.registry, scoped_state)
+                .map_err(to_string)?;
+        }
+
         let mut states = Vec::new();
         for (id, definition) in self.registry.iter() {
             let staged = state_for(&self.staged, definition.scope);
@@ -180,9 +189,13 @@ impl SessionCore {
             let staged_layer = (staged.override_value(id), staged.override_source(id));
             let committed_layer = (committed.override_value(id), committed.override_source(id));
             // Availability reads the values the user is currently editing.
-            let availability =
-                evaluate_availability(&self.registry, staged, &self.capabilities, id)
-                    .map_err(to_string)?;
+            let availability = evaluate_availability(
+                &self.registry,
+                &staged_for_availability,
+                &self.capabilities,
+                id,
+            )
+            .map_err(to_string)?;
 
             states.push(json!({
                 "id": id.as_str(),
