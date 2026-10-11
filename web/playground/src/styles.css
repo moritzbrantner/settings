@@ -1,0 +1,35 @@
+@import "@moritzbrantner/ui/styles.css";
+@import "@moritzbrantner/ui/component-sources.css";
+
+@source "./";
+
+html {
+  font-size: calc(100% * var(--playground-text-scale, 1));
+}
+
+body {
+  min-width: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+html[data-reduce-motion="true"] *,
+html[data-reduce-motion="true"] *::before,
+html[data-reduce-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-night-mode="true"] body {
+  filter: sepia(0.25) brightness(0.92);
+}
+
+html[data-contrast="high"] {
+  --border: var(--foreground);
+  --muted-foreground: var(--foreground);
+}
+
+html[data-contrast="low"] body {
+  filter: contrast(0.85);
+}

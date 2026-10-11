@@ -1,0 +1,847 @@
+{
+  "definitions": [
+    {
+      "id": "accessibility.reduce_motion",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "accessibility.captions",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "accessibility.text_scale",
+      "kind": {
+        "type": "number",
+        "min": 0.75,
+        "max": 2.0
+      },
+      "default": {
+        "type": "number",
+        "value": 1.0
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "appearance.color_scheme",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "system",
+          "light",
+          "dark"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "system"
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "appearance.contrast",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "system",
+          "normal",
+          "high",
+          "low"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "system"
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "appearance.color_vision",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "off",
+          "protanopia",
+          "deuteranopia",
+          "tritanopia",
+          "achromatopsia"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "off"
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "appearance.night_mode",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "audio.master_volume",
+      "kind": {
+        "type": "integer",
+        "min": 0,
+        "max": 100
+      },
+      "default": {
+        "type": "integer",
+        "value": 80
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "audio.dialogue_boost",
+      "kind": {
+        "type": "number",
+        "min": 0,
+        "max": 12
+      },
+      "default": {
+        "type": "number",
+        "value": 0
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "audio.sample_rate",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "44100",
+          "48000",
+          "96000"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "48000"
+      },
+      "scope": "device",
+      "apply_mode": "restart"
+    },
+    {
+      "id": "input.mouse_sensitivity",
+      "kind": {
+        "type": "number",
+        "min": 0.05,
+        "max": 10
+      },
+      "default": {
+        "type": "number",
+        "value": 1.0
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "input.invert_y",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "input.stick_deadzone",
+      "kind": {
+        "type": "number",
+        "min": 0,
+        "max": 0.5
+      },
+      "default": {
+        "type": "number",
+        "value": 0.1
+      },
+      "scope": "device",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "video.window_mode",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "windowed",
+          "borderless",
+          "fullscreen"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "windowed"
+      },
+      "scope": "device",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "video.fov",
+      "kind": {
+        "type": "integer",
+        "min": 60,
+        "max": 120
+      },
+      "default": {
+        "type": "integer",
+        "value": 90
+      },
+      "scope": "user",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "video.vsync",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": true
+      },
+      "scope": "device",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "video.hdr",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
+      },
+      "scope": "device",
+      "apply_mode": "restart",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.hdr",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
+      "id": "video.render_scale",
+      "kind": {
+        "type": "number",
+        "min": 0.5,
+        "max": 2.0
+      },
+      "default": {
+        "type": "number",
+        "value": 1.0
+      },
+      "scope": "device",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "video.upscaler",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "off",
+          "spatial",
+          "temporal"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "off"
+      },
+      "scope": "device",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "video.upscaler_sharpness",
+      "kind": {
+        "type": "number",
+        "min": 0,
+        "max": 1
+      },
+      "default": {
+        "type": "number",
+        "value": 0.5
+      },
+      "scope": "device",
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "not",
+          "condition": {
+            "op": "setting_equals",
+            "id": "video.upscaler",
+            "value": {
+              "type": "choice",
+              "value": "off"
+            }
+          }
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
+      "id": "network.region",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "auto",
+          "eu",
+          "na",
+          "asia"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "auto"
+      },
+      "scope": "user",
+      "apply_mode": "reconnect"
+    },
+    {
+      "id": "network.show_latency",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": true
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "profile.display_name",
+      "kind": {
+        "type": "text",
+        "min_chars": 3,
+        "max_chars": 24
+      },
+      "default": {
+        "type": "text",
+        "value": "Player One"
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "simulation.tick_rate",
+      "kind": {
+        "type": "integer",
+        "min": 10,
+        "max": 240
+      },
+      "default": {
+        "type": "integer",
+        "value": 60
+      },
+      "scope": "session",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "simulation.debug_overlay",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
+      },
+      "scope": "session",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "simulation.random_seed",
+      "kind": {
+        "type": "integer",
+        "min": 0,
+        "max": 2147483647
+      },
+      "default": {
+        "type": "integer",
+        "value": 1
+      },
+      "scope": "save",
+      "apply_mode": "immediate"
+    }
+  ],
+  "presentation": [
+    {
+      "id": "accessibility.reduce_motion",
+      "metadata": {
+        "label_key": "settings.accessibility.reduce_motion.label",
+        "description_key": "settings.accessibility.reduce_motion.description",
+        "category_key": "settings.category.accessibility",
+        "group_key": "settings.group.motion",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.animation",
+          "settings.search.motion_sickness"
+        ]
+      }
+    },
+    {
+      "id": "accessibility.captions",
+      "metadata": {
+        "label_key": "settings.accessibility.captions.label",
+        "description_key": "settings.accessibility.captions.description",
+        "category_key": "settings.category.accessibility",
+        "group_key": "settings.group.perception",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.subtitles"
+        ]
+      }
+    },
+    {
+      "id": "accessibility.text_scale",
+      "metadata": {
+        "label_key": "settings.accessibility.text_scale.label",
+        "description_key": "settings.accessibility.text_scale.description",
+        "category_key": "settings.category.accessibility",
+        "group_key": "settings.group.text",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.font_size"
+        ]
+      }
+    },
+    {
+      "id": "appearance.color_scheme",
+      "metadata": {
+        "label_key": "settings.appearance.color_scheme.label",
+        "description_key": "settings.appearance.color_scheme.description",
+        "category_key": "settings.category.appearance",
+        "group_key": "settings.group.theme",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.dark_mode"
+        ]
+      }
+    },
+    {
+      "id": "appearance.contrast",
+      "metadata": {
+        "label_key": "settings.appearance.contrast.label",
+        "description_key": "settings.appearance.contrast.description",
+        "category_key": "settings.category.appearance",
+        "group_key": "settings.group.theme",
+        "order": 20,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "appearance.color_vision",
+      "metadata": {
+        "label_key": "settings.appearance.color_vision.label",
+        "description_key": "settings.appearance.color_vision.description",
+        "category_key": "settings.category.appearance",
+        "group_key": "settings.group.theme",
+        "order": 30,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.colorblind"
+        ]
+      }
+    },
+    {
+      "id": "appearance.night_mode",
+      "metadata": {
+        "label_key": "settings.appearance.night_mode.label",
+        "description_key": "settings.appearance.night_mode.description",
+        "category_key": "settings.category.appearance",
+        "group_key": "settings.group.theme",
+        "order": 40,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "audio.master_volume",
+      "metadata": {
+        "label_key": "settings.audio.master_volume.label",
+        "description_key": "settings.audio.master_volume.description",
+        "category_key": "settings.category.audio",
+        "group_key": "settings.group.mix",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.volume",
+          "settings.search.sound"
+        ]
+      }
+    },
+    {
+      "id": "audio.dialogue_boost",
+      "metadata": {
+        "label_key": "settings.audio.dialogue_boost.label",
+        "description_key": "settings.audio.dialogue_boost.description",
+        "category_key": "settings.category.audio",
+        "group_key": "settings.group.mix",
+        "order": 20,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "audio.sample_rate",
+      "metadata": {
+        "label_key": "settings.audio.sample_rate.label",
+        "description_key": "settings.audio.sample_rate.description",
+        "category_key": "settings.category.audio",
+        "group_key": "settings.group.output",
+        "order": 10,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "input.mouse_sensitivity",
+      "metadata": {
+        "label_key": "settings.input.mouse_sensitivity.label",
+        "description_key": "settings.input.mouse_sensitivity.description",
+        "category_key": "settings.category.controls",
+        "group_key": "settings.group.pointer",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.aim"
+        ]
+      }
+    },
+    {
+      "id": "input.invert_y",
+      "metadata": {
+        "label_key": "settings.input.invert_y.label",
+        "description_key": "settings.input.invert_y.description",
+        "category_key": "settings.category.controls",
+        "group_key": "settings.group.pointer",
+        "order": 20,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "input.stick_deadzone",
+      "metadata": {
+        "label_key": "settings.input.stick_deadzone.label",
+        "description_key": "settings.input.stick_deadzone.description",
+        "category_key": "settings.category.controls",
+        "group_key": "settings.group.gamepad",
+        "order": 10,
+        "discoverability": "advanced",
+        "search_keys": [
+          "settings.search.drift"
+        ]
+      }
+    },
+    {
+      "id": "video.window_mode",
+      "metadata": {
+        "label_key": "settings.video.window_mode.label",
+        "description_key": "settings.video.window_mode.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.display",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.window_mode"
+        ]
+      }
+    },
+    {
+      "id": "video.fov",
+      "metadata": {
+        "label_key": "settings.video.fov.label",
+        "description_key": "settings.video.fov.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.display",
+        "order": 20,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.fov"
+        ]
+      }
+    },
+    {
+      "id": "video.vsync",
+      "metadata": {
+        "label_key": "settings.video.vsync.label",
+        "description_key": "settings.video.vsync.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.display",
+        "order": 30,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "video.hdr",
+      "metadata": {
+        "label_key": "settings.video.hdr.label",
+        "description_key": "settings.video.hdr.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.display",
+        "order": 40,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "video.render_scale",
+      "metadata": {
+        "label_key": "settings.video.render_scale.label",
+        "description_key": "settings.video.render_scale.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.resolution"
+        ]
+      }
+    },
+    {
+      "id": "video.upscaler",
+      "metadata": {
+        "label_key": "settings.video.upscaler.label",
+        "description_key": "settings.video.upscaler.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 20,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "video.upscaler_sharpness",
+      "metadata": {
+        "label_key": "settings.video.upscaler_sharpness.label",
+        "description_key": "settings.video.upscaler_sharpness.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 30,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "network.region",
+      "metadata": {
+        "label_key": "settings.network.region.label",
+        "description_key": "settings.network.region.description",
+        "category_key": "settings.category.online",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.server"
+        ]
+      }
+    },
+    {
+      "id": "network.show_latency",
+      "metadata": {
+        "label_key": "settings.network.show_latency.label",
+        "description_key": "settings.network.show_latency.description",
+        "category_key": "settings.category.online",
+        "order": 20,
+        "discoverability": "advanced",
+        "search_keys": [
+          "settings.search.ping"
+        ]
+      }
+    },
+    {
+      "id": "profile.display_name",
+      "metadata": {
+        "label_key": "settings.profile.display_name.label",
+        "description_key": "settings.profile.display_name.description",
+        "category_key": "settings.category.profile",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.nickname"
+        ]
+      }
+    },
+    {
+      "id": "simulation.tick_rate",
+      "metadata": {
+        "label_key": "settings.simulation.tick_rate.label",
+        "description_key": "settings.simulation.tick_rate.description",
+        "category_key": "settings.category.simulation",
+        "order": 10,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.physics"
+        ]
+      }
+    },
+    {
+      "id": "simulation.debug_overlay",
+      "metadata": {
+        "label_key": "settings.simulation.debug_overlay.label",
+        "description_key": "settings.simulation.debug_overlay.description",
+        "category_key": "settings.category.simulation",
+        "order": 20,
+        "discoverability": "advanced"
+      }
+    },
+    {
+      "id": "simulation.random_seed",
+      "metadata": {
+        "label_key": "settings.simulation.random_seed.label",
+        "description_key": "settings.simulation.random_seed.description",
+        "category_key": "settings.category.simulation",
+        "order": 30,
+        "discoverability": "search_only",
+        "search_keys": [
+          "settings.search.seed"
+        ]
+      }
+    }
+  ],
+  "localizations": {
+    "settings.accessibility.captions.description": "Show dialogue and important sound cues as on-screen text.",
+    "settings.accessibility.captions.label": "Captions",
+    "settings.accessibility.reduce_motion.description": "Replace camera shake, parallax and animated transitions with simple fades.",
+    "settings.accessibility.reduce_motion.label": "Reduce motion",
+    "settings.accessibility.text_scale.description": "Multiplier for interface text size; exact values are kept as entered.",
+    "settings.accessibility.text_scale.label": "Text scale",
+    "settings.appearance.color_scheme.description": "Light or dark interface, or follow the operating system.",
+    "settings.appearance.color_scheme.label": "Color scheme",
+    "settings.appearance.color_vision.description": "Prefer palettes that stay distinguishable for a color-vision profile.",
+    "settings.appearance.color_vision.label": "Color vision assist",
+    "settings.appearance.contrast.description": "Interface contrast preference.",
+    "settings.appearance.contrast.label": "Contrast",
+    "settings.appearance.night_mode.description": "Warm and dim the palette for low-light use.",
+    "settings.appearance.night_mode.label": "Night mode",
+    "settings.audio.dialogue_boost.description": "Extra gain for speech in decibels.",
+    "settings.audio.dialogue_boost.label": "Dialogue boost",
+    "settings.audio.master_volume.description": "Overall output level in percent.",
+    "settings.audio.master_volume.label": "Master volume",
+    "settings.audio.sample_rate.description": "Output sample rate of the audio device.",
+    "settings.audio.sample_rate.label": "Sample rate",
+    "settings.capability.renderer.hdr": "an HDR-capable display",
+    "settings.category.accessibility": "Accessibility",
+    "settings.category.appearance": "Appearance",
+    "settings.category.audio": "Audio",
+    "settings.category.controls": "Controls",
+    "settings.category.graphics": "Graphics",
+    "settings.category.online": "Online",
+    "settings.category.profile": "Profile",
+    "settings.category.simulation": "Simulation",
+    "settings.group.display": "Display",
+    "settings.group.gamepad": "Gamepad",
+    "settings.group.mix": "Mix",
+    "settings.group.motion": "Motion",
+    "settings.group.output": "Output",
+    "settings.group.perception": "Perception",
+    "settings.group.pointer": "Pointer",
+    "settings.group.quality": "Quality",
+    "settings.group.text": "Text",
+    "settings.group.theme": "Theme",
+    "settings.input.invert_y.description": "Moving the pointer up looks down.",
+    "settings.input.invert_y.label": "Invert vertical look",
+    "settings.input.mouse_sensitivity.description": "Pointer look speed multiplier.",
+    "settings.input.mouse_sensitivity.label": "Mouse sensitivity",
+    "settings.input.stick_deadzone.description": "Ignore small analog stick movements below this fraction.",
+    "settings.input.stick_deadzone.label": "Stick deadzone",
+    "settings.network.region.description": "Matchmaking region; changing it reconnects to a new server.",
+    "settings.network.region.label": "Server region",
+    "settings.network.show_latency.description": "Show round-trip time in the corner of the screen.",
+    "settings.network.show_latency.label": "Latency indicator",
+    "settings.option.appearance.color_scheme.dark": "Dark",
+    "settings.option.appearance.color_scheme.light": "Light",
+    "settings.option.appearance.color_scheme.system": "Follow system",
+    "settings.option.appearance.color_vision.achromatopsia": "Achromatopsia",
+    "settings.option.appearance.color_vision.deuteranopia": "Deuteranopia",
+    "settings.option.appearance.color_vision.off": "Off",
+    "settings.option.appearance.color_vision.protanopia": "Protanopia",
+    "settings.option.appearance.color_vision.tritanopia": "Tritanopia",
+    "settings.option.appearance.contrast.high": "High",
+    "settings.option.appearance.contrast.low": "Low",
+    "settings.option.appearance.contrast.normal": "Normal",
+    "settings.option.appearance.contrast.system": "Follow system",
+    "settings.option.audio.sample_rate.44100": "44.1 kHz",
+    "settings.option.audio.sample_rate.48000": "48 kHz",
+    "settings.option.audio.sample_rate.96000": "96 kHz",
+    "settings.option.network.region.asia": "Asia",
+    "settings.option.network.region.auto": "Automatic",
+    "settings.option.network.region.eu": "Europe",
+    "settings.option.network.region.na": "North America",
+    "settings.option.video.upscaler.off": "Off",
+    "settings.option.video.upscaler.spatial": "Spatial upscaler",
+    "settings.option.video.upscaler.temporal": "Temporal upscaler",
+    "settings.option.video.window_mode.borderless": "Borderless",
+    "settings.option.video.window_mode.fullscreen": "Fullscreen",
+    "settings.option.video.window_mode.windowed": "Windowed",
+    "settings.profile.display_name.description": "Name shown to other players; 3 to 24 characters.",
+    "settings.profile.display_name.label": "Display name",
+    "settings.search.aim": "aim",
+    "settings.search.animation": "animation",
+    "settings.search.colorblind": "colorblind",
+    "settings.search.dark_mode": "dark mode",
+    "settings.search.drift": "stick drift",
+    "settings.search.font_size": "font size",
+    "settings.search.fov": "fov",
+    "settings.search.motion_sickness": "motion sickness",
+    "settings.search.nickname": "nickname",
+    "settings.search.physics": "physics",
+    "settings.search.ping": "ping",
+    "settings.search.resolution": "resolution",
+    "settings.search.seed": "seed",
+    "settings.search.server": "server",
+    "settings.search.sound": "sound",
+    "settings.search.subtitles": "subtitles",
+    "settings.search.volume": "volume",
+    "settings.search.window_mode": "fullscreen",
+    "settings.simulation.debug_overlay.description": "Draw collision shapes and timing counters.",
+    "settings.simulation.debug_overlay.label": "Debug overlay",
+    "settings.simulation.random_seed.description": "Seed used for deterministic world generation in this save.",
+    "settings.simulation.random_seed.label": "Random seed",
+    "settings.simulation.tick_rate.description": "Fixed simulation steps per second for this session.",
+    "settings.simulation.tick_rate.label": "Tick rate",
+    "settings.video.fov.description": "Horizontal field of view in degrees.",
+    "settings.video.fov.label": "Field of view",
+    "settings.video.hdr.description": "Use a high dynamic range swap chain.",
+    "settings.video.hdr.label": "HDR output",
+    "settings.video.render_scale.description": "Internal resolution relative to the output resolution.",
+    "settings.video.render_scale.label": "Render scale",
+    "settings.video.upscaler.description": "Reconstruct the output image from a lower render resolution.",
+    "settings.video.upscaler.label": "Upscaler",
+    "settings.video.upscaler_sharpness.description": "Sharpening strength applied by the upscaler.",
+    "settings.video.upscaler_sharpness.label": "Upscaler sharpness",
+    "settings.video.vsync.description": "Synchronize frames with the display refresh to avoid tearing.",
+    "settings.video.vsync.label": "Vertical sync",
+    "settings.video.window_mode.description": "How the game window occupies the display.",
+    "settings.video.window_mode.label": "Window mode"
+  }
+}
