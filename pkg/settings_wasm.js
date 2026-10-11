@@ -12,7 +12,51 @@ export class SettingsSession {
         wasm.__wbg_settingssession_free(ptr, 0);
     }
     /**
-     * Return every effective value keyed by stable setting id.
+     * Commit the staged state and return the committed value changes.
+     * @returns {string}
+     */
+    apply_staged_json() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_apply_staged_json(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Discard the staged state and return the staged-to-committed value changes.
+     * @returns {string}
+     */
+    cancel_staged_json() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_cancel_staged_json(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Return every committed effective value keyed by stable setting id.
      *
      * Values retain the tagged `SettingValue` wire representation so browser
      * adapters cannot accidentally erase type information.
@@ -61,10 +105,19 @@ export class SettingsSession {
         }
     }
     /**
+     * Whether any staged layered state differs from the committed state.
+     * @returns {boolean}
+     */
+    has_staged_changes() {
+        const ret = wasm.settingssession_has_staged_changes(this.__wbg_ptr);
+        return ret !== 0;
+    }
+    /**
      * Replace one persistent scope from a canonical settings snapshot.
      *
      * Replacing rather than merging is important: an override that disappears
-     * from a later snapshot must also disappear from the runtime state.
+     * from a later snapshot must also disappear from the runtime state. Staged changes in that
+     * scope are discarded.
      * @param {string} raw_scope
      * @param {string} json
      * @returns {string}
@@ -140,6 +193,7 @@ export class SettingsSession {
         }
     }
     /**
+     * Remove the committed durable override of one setting.
      * @param {string} raw_id
      */
     reset(raw_id) {
@@ -151,7 +205,37 @@ export class SettingsSession {
         }
     }
     /**
-     * Set one user-facing value using the canonical tagged JSON value shape.
+     * Remove every committed durable override in every scope.
+     */
+    reset_all() {
+        wasm.settingssession_reset_all(this.__wbg_ptr);
+    }
+    /**
+     * Remove the committed durable overrides of a caller-supplied list of settings atomically.
+     * @param {string} ids_json
+     */
+    reset_many_json(ids_json) {
+        const ptr0 = passStringToWasm0(ids_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.settingssession_reset_many_json(this.__wbg_ptr, ptr0, len0);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Replace the caller-supplied capability facts used for availability evaluation.
+     * @param {string} facts_json
+     */
+    set_capabilities_json(facts_json) {
+        const ptr0 = passStringToWasm0(facts_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.settingssession_set_capabilities_json(this.__wbg_ptr, ptr0, len0);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Set one committed user-facing value using the canonical tagged JSON value shape.
      * @param {string} raw_id
      * @param {string} value_json
      */
@@ -163,6 +247,83 @@ export class SettingsSession {
         const ret = wasm.settingssession_set_json(this.__wbg_ptr, ptr0, len0, ptr1, len1);
         if (ret[1]) {
             throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Per-setting staged value, provenance, override, staging and availability status.
+     * @returns {string}
+     */
+    setting_states_json() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_setting_states_json(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Stage removal of every durable override in every scope.
+     */
+    stage_reset_all() {
+        wasm.settingssession_stage_reset_all(this.__wbg_ptr);
+    }
+    /**
+     * Stage removal of the durable overrides of a caller-supplied list of settings atomically.
+     * @param {string} ids_json
+     */
+    stage_reset_many_json(ids_json) {
+        const ptr0 = passStringToWasm0(ids_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.settingssession_stage_reset_many_json(this.__wbg_ptr, ptr0, len0);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Stage one value without committing it.
+     * @param {string} raw_id
+     * @param {string} value_json
+     */
+    stage_set_json(raw_id, value_json) {
+        const ptr0 = passStringToWasm0(raw_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(value_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ret = wasm.settingssession_stage_set_json(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Deterministic committed-to-staged value changes.
+     * @returns {string}
+     */
+    staged_changes_json() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_staged_changes_json(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
         }
     }
 }
