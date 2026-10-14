@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@moritzbrantner/ui": "git+https://github.com/moritzbrantner/ui.git#35ea57483456d4b6ecf233c8dae5a6e4eba5c661",
-    "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",
