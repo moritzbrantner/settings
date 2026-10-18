@@ -36,3 +36,23 @@ jobs:
           name: settings-allocation-evidence
           path: target/evidence/settings-allocation.json
           if-no-files-found: error
+
+  validate-pages:
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
+    uses: ./.github/workflows/pages.yml
+
+  merge-ready:
+    name: ${{ github.event_name == 'pull_request' && 'merge-ready' || 'validation-summary' }}
+    if: ${{ always() }}
+    needs: ["rust", "validate-pages"]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: moritzbrantner/reusable-workflows/.github/actions/merge-ready@b0f25f241d76af2584dfc9e375084ff5c5cb97da
+        with:
+          needs: ${{ toJSON(needs) }}
+          required: '["rust", "validate-pages"]'
+          allow-skipped: ${{ github.event_name != 'pull_request' && '["validate-pages"]' || '[]' }}
