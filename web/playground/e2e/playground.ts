@@ -3,7 +3,7 @@
 // Seams the playground must provide (accessible roles/names first, one data attribute):
 // - It is served at the Playwright baseURL root and fetches its settings fixture at runtime from a
 //   URL ending in `playground-settings.json` (the bytes of fixtures/presentation/playground.json).
-// - A level-1 heading containing "Playground", a `main` landmark, a `searchbox` named /search/i and
+// - A level-1 heading containing "Playground", a `main` landmark, a `searchbox` named /search settings/i and
 //   a `navigation` landmark named /categor/i whose links/buttons/tabs carry the localized category
 //   names. On narrow screens the navigation may be behind a button named /categor|menu|navigation/i.
 // - One element per rendered setting with `data-setting-id="<setting id>"` (the attribute the React
@@ -161,7 +161,8 @@ export async function openCategory(page: Page, name: string): Promise<void> {
   await item.click();
 }
 
-export const searchBox = (page: Page) => page.getByRole('searchbox', { name: /search/i });
+// Composed surfaces (the input-bindings editor) bring their own search; target the settings one.
+export const searchBox = (page: Page) => page.getByRole('searchbox', { name: /search settings/i });
 
 export async function clearSearch(page: Page): Promise<void> {
   const box = searchBox(page);

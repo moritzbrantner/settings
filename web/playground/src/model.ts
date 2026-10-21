@@ -14,7 +14,14 @@ import type {
 export interface PlaygroundFixture {
   definitions: SettingDefinition[];
   presentation: PresentationEntry[];
+  /** Opaque input-bindings-owned surfaces composed into categories; no binding data. */
+  input_bindings_surfaces?: InputBindingsSurface[];
   localizations: Record<string, string>;
+}
+
+export interface InputBindingsSurface {
+  category_key: string;
+  descriptor: { surface_id: string };
 }
 
 export type Localize = (key: string) => string;

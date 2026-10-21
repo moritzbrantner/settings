@@ -12,6 +12,7 @@ import type {
   SettingValue,
 } from '@moritzbrantner/settings-browser';
 import { Button, Input } from '@moritzbrantner/ui/stable';
+import { ControlsBindings } from './ControlsBindings';
 import { GraphicsPreview } from './GraphicsPreview';
 import { rendererConfig } from './graphics';
 import { SettingRow } from './SettingRow';
@@ -314,6 +315,11 @@ export function App({ session, fixture, webgl }: AppProps) {
                 </Button>
               </div>
               {activeCategory === GRAPHICS_CATEGORY && <GraphicsPreview config={graphics} webgl={webgl} />}
+              {(fixture.input_bindings_surfaces ?? [])
+                .filter((surface) => surface.category_key === activeCategory)
+                .map((surface) => (
+                  <ControlsBindings key={surface.descriptor.surface_id} surfaceId={surface.descriptor.surface_id} />
+                ))}
               <CategoryRows entries={visible} localize={localize} renderRow={renderRow} />
             </section>
           )}

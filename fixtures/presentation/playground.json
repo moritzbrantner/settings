@@ -190,6 +190,20 @@
       "apply_mode": "immediate"
     },
     {
+      "id": "input.touch_look_sensitivity",
+      "kind": {
+        "type": "number",
+        "min": 0.1,
+        "max": 5
+      },
+      "default": {
+        "type": "number",
+        "value": 1.0
+      },
+      "scope": "device",
+      "apply_mode": "immediate"
+    },
+    {
       "id": "video.window_mode",
       "kind": {
         "type": "choice",
@@ -640,6 +654,17 @@
       }
     },
     {
+      "id": "input.touch_look_sensitivity",
+      "metadata": {
+        "label_key": "settings.input.touch_look_sensitivity.label",
+        "description_key": "settings.input.touch_look_sensitivity.description",
+        "category_key": "settings.category.controls",
+        "group_key": "settings.group.touch",
+        "order": 10,
+        "discoverability": "primary"
+      }
+    },
+    {
       "id": "video.window_mode",
       "metadata": {
         "label_key": "settings.video.window_mode.label",
@@ -837,6 +862,14 @@
       }
     }
   ],
+  "input_bindings_surfaces": [
+    {
+      "category_key": "settings.category.controls",
+      "descriptor": {
+        "surface_id": "playground.controls"
+      }
+    }
+  ],
   "localizations": {
     "settings.accessibility.captions.description": "Show dialogue and important sound cues as on-screen text.",
     "settings.accessibility.captions.label": "Captions",
@@ -880,12 +913,15 @@
     "settings.group.quality": "Quality",
     "settings.group.text": "Text",
     "settings.group.theme": "Theme",
+    "settings.group.touch": "Touch",
     "settings.input.invert_y.description": "Moving the pointer up looks down.",
     "settings.input.invert_y.label": "Invert vertical look",
     "settings.input.mouse_sensitivity.description": "Pointer look speed multiplier.",
     "settings.input.mouse_sensitivity.label": "Mouse sensitivity",
     "settings.input.stick_deadzone.description": "Ignore small analog stick movements below this fraction.",
     "settings.input.stick_deadzone.label": "Stick deadzone",
+    "settings.input.touch_look_sensitivity.description": "Look speed multiplier for touch drags and on-screen look zones.",
+    "settings.input.touch_look_sensitivity.label": "Touch look sensitivity",
     "settings.network.region.description": "Matchmaking region; changing it reconnects to a new server.",
     "settings.network.region.label": "Server region",
     "settings.network.show_latency.description": "Show round-trip time in the corner of the screen.",

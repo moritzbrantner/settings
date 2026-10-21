@@ -7,6 +7,7 @@
 //! hard-coding product content.
 
 use serde::Deserialize;
+use settings_adapters::InputBindingsIntegrationDescriptor;
 use settings_appearance::{
     AppearanceDefaults, ColorSchemePreference, ColorVisionAssistMode, ContrastPreference,
     install_appearance_settings,
@@ -21,7 +22,16 @@ use std::collections::{BTreeMap, BTreeSet};
 struct PlaygroundFixture {
     definitions: Vec<SettingDefinition>,
     presentation: Vec<PresentationEntry>,
+    #[serde(default)]
+    input_bindings_surfaces: Vec<InputBindingsSurface>,
     localizations: BTreeMap<String, String>,
+}
+
+/// Places an opaque input-bindings-owned surface in a playground category (issue #24).
+#[derive(Deserialize)]
+struct InputBindingsSurface {
+    category_key: String,
+    descriptor: InputBindingsIntegrationDescriptor,
 }
 
 fn fixture() -> PlaygroundFixture {
@@ -264,5 +274,36 @@ fn playground_includes_the_canonical_appearance_settings() {
         assert_eq!(actual.kind, expected.kind, "{id} kind");
         assert_eq!(actual.scope, expected.scope, "{id} scope");
         assert_eq!(actual.apply_mode, expected.apply_mode, "{id} apply mode");
+    }
+}
+
+#[test]
+fn playground_composes_the_input_bindings_editor_into_controls_without_binding_settings() {
+    let fixture = fixture();
+    let categories: BTreeSet<_> = fixture
+        .presentation
+        .iter()
+        .map(|entry| entry.metadata.category_key.as_str().to_owned())
+        .collect();
+
+    let [surface] = fixture.input_bindings_surfaces.as_slice() else {
+        panic!("playground must compose exactly one input-bindings surface");
+    };
+    assert_eq!(surface.category_key, "settings.category.controls");
+    assert!(categories.contains(&surface.category_key));
+    assert_eq!(
+        surface.descriptor.surface_id.as_str(),
+        "playground.controls"
+    );
+
+    // Bindings stay owned by input-bindings: no setting may model a binding, action or profile.
+    for definition in &fixture.definitions {
+        let id = definition.id.as_str();
+        assert!(
+            !["binding", "keybind", "shortcut", "chord"]
+                .iter()
+                .any(|word| id.contains(word)),
+            "{id} looks like binding state; bindings belong to the input-bindings editor"
+        );
     }
 }
