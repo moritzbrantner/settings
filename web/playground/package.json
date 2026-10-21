@@ -15,6 +15,7 @@
     "test:e2e": "playwright test --workers=1"
   },
   "dependencies": {
+    "@moritzbrantner/three-d-renderer": "github:moritzbrantner/3d-lab#235774615f1367065093deb6988f5217bdf4d7e1",
     "@moritzbrantner/ui": "git+https://github.com/moritzbrantner/ui.git#35ea57483456d4b6ecf233c8dae5a6e4eba5c661",
     "react": "19.3.1",
     "react-dom": "19.3.1"

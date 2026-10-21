@@ -230,7 +230,15 @@
         "value": true
       },
       "scope": "device",
-      "apply_mode": "apply"
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.present_mode",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
     },
     {
       "id": "video.hdr",
@@ -281,7 +289,15 @@
         "value": "off"
       },
       "scope": "device",
-      "apply_mode": "apply"
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.upscaler",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
     },
     {
       "id": "video.upscaler_sharpness",
@@ -310,6 +326,63 @@
         },
         "when_unavailable": "disable"
       }
+    },
+    {
+      "id": "video.antialias",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": true
+      },
+      "scope": "device",
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.webgl",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
+      "id": "video.shadows",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": true
+      },
+      "scope": "device",
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.webgl",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
+      "id": "video.fog",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "off",
+          "light",
+          "dense"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "light"
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
     },
     {
       "id": "network.region",
@@ -653,6 +726,42 @@
       }
     },
     {
+      "id": "video.antialias",
+      "metadata": {
+        "label_key": "settings.video.antialias.label",
+        "description_key": "settings.video.antialias.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 40,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "video.shadows",
+      "metadata": {
+        "label_key": "settings.video.shadows.label",
+        "description_key": "settings.video.shadows.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 50,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "video.fog",
+      "metadata": {
+        "label_key": "settings.video.fog.label",
+        "description_key": "settings.video.fog.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 60,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.fog"
+        ]
+      }
+    },
+    {
       "id": "network.region",
       "metadata": {
         "label_key": "settings.network.region.label",
@@ -749,7 +858,10 @@
     "settings.audio.master_volume.label": "Master volume",
     "settings.audio.sample_rate.description": "Output sample rate of the audio device.",
     "settings.audio.sample_rate.label": "Sample rate",
-    "settings.capability.renderer.hdr": "an HDR-capable display",
+    "settings.capability.renderer.hdr": "HDR output from the renderer",
+    "settings.capability.renderer.present_mode": "renderer control over frame presentation",
+    "settings.capability.renderer.upscaler": "a renderer upscaler",
+    "settings.capability.renderer.webgl": "WebGL 2 rendering",
     "settings.category.accessibility": "Accessibility",
     "settings.category.appearance": "Appearance",
     "settings.category.audio": "Audio",
@@ -797,6 +909,9 @@
     "settings.option.network.region.auto": "Automatic",
     "settings.option.network.region.eu": "Europe",
     "settings.option.network.region.na": "North America",
+    "settings.option.video.fog.dense": "Dense",
+    "settings.option.video.fog.light": "Light",
+    "settings.option.video.fog.off": "Off",
     "settings.option.video.upscaler.off": "Off",
     "settings.option.video.upscaler.spatial": "Spatial upscaler",
     "settings.option.video.upscaler.temporal": "Temporal upscaler",
@@ -811,6 +926,7 @@
     "settings.search.dark_mode": "dark mode",
     "settings.search.drift": "stick drift",
     "settings.search.font_size": "font size",
+    "settings.search.fog": "haze",
     "settings.search.fov": "fov",
     "settings.search.motion_sickness": "motion sickness",
     "settings.search.nickname": "nickname",
@@ -829,19 +945,25 @@
     "settings.simulation.random_seed.label": "Random seed",
     "settings.simulation.tick_rate.description": "Fixed simulation steps per second for this session.",
     "settings.simulation.tick_rate.label": "Tick rate",
+    "settings.video.antialias.description": "Smooth jagged edges with multisampling. Applying recreates the renderer.",
+    "settings.video.antialias.label": "Anti-aliasing",
+    "settings.video.fog.description": "Distance haze in the scene.",
+    "settings.video.fog.label": "Distance fog",
     "settings.video.fov.description": "Horizontal field of view in degrees.",
     "settings.video.fov.label": "Field of view",
     "settings.video.hdr.description": "Use a high dynamic range swap chain.",
     "settings.video.hdr.label": "HDR output",
     "settings.video.render_scale.description": "Internal resolution relative to the output resolution.",
     "settings.video.render_scale.label": "Render scale",
+    "settings.video.shadows.description": "Cast sun shadows. Applying recreates the renderer.",
+    "settings.video.shadows.label": "Shadows",
     "settings.video.upscaler.description": "Reconstruct the output image from a lower render resolution.",
     "settings.video.upscaler.label": "Upscaler",
     "settings.video.upscaler_sharpness.description": "Sharpening strength applied by the upscaler.",
     "settings.video.upscaler_sharpness.label": "Upscaler sharpness",
     "settings.video.vsync.description": "Synchronize frames with the display refresh to avoid tearing.",
     "settings.video.vsync.label": "Vertical sync",
-    "settings.video.window_mode.description": "How the game window occupies the display.",
+    "settings.video.window_mode.description": "How the game window occupies the display. In the browser, borderless and fullscreen both use the Fullscreen API and must be confirmed.",
     "settings.video.window_mode.label": "Window mode"
   }
 }
