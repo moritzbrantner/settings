@@ -119,15 +119,41 @@
       "apply_mode": "immediate"
     },
     {
-      "id": "audio.dialogue_boost",
+      "id": "audio.music_volume",
       "kind": {
-        "type": "number",
+        "type": "integer",
         "min": 0,
-        "max": 12
+        "max": 100
       },
       "default": {
-        "type": "number",
-        "value": 0
+        "type": "integer",
+        "value": 100
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "audio.effects_volume",
+      "kind": {
+        "type": "integer",
+        "min": 0,
+        "max": 100
+      },
+      "default": {
+        "type": "integer",
+        "value": 100
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
+    },
+    {
+      "id": "audio.mute",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": false
       },
       "scope": "user",
       "apply_mode": "immediate"
@@ -593,14 +619,47 @@
       }
     },
     {
-      "id": "audio.dialogue_boost",
+      "id": "audio.music_volume",
       "metadata": {
-        "label_key": "settings.audio.dialogue_boost.label",
-        "description_key": "settings.audio.dialogue_boost.description",
+        "label_key": "settings.audio.music_volume.label",
+        "description_key": "settings.audio.music_volume.description",
         "category_key": "settings.category.audio",
         "group_key": "settings.group.mix",
         "order": 20,
-        "discoverability": "primary"
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.volume",
+          "settings.search.sound"
+        ]
+      }
+    },
+    {
+      "id": "audio.effects_volume",
+      "metadata": {
+        "label_key": "settings.audio.effects_volume.label",
+        "description_key": "settings.audio.effects_volume.description",
+        "category_key": "settings.category.audio",
+        "group_key": "settings.group.mix",
+        "order": 30,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.volume",
+          "settings.search.sound"
+        ]
+      }
+    },
+    {
+      "id": "audio.mute",
+      "metadata": {
+        "label_key": "settings.audio.mute.label",
+        "description_key": "settings.audio.mute.description",
+        "category_key": "settings.category.audio",
+        "group_key": "settings.group.mix",
+        "order": 40,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.sound"
+        ]
       }
     },
     {
@@ -885,10 +944,14 @@
     "settings.appearance.contrast.label": "Contrast",
     "settings.appearance.night_mode.description": "Warm and dim the palette for low-light use.",
     "settings.appearance.night_mode.label": "Night mode",
-    "settings.audio.dialogue_boost.description": "Extra gain for speech in decibels.",
-    "settings.audio.dialogue_boost.label": "Dialogue boost",
+    "settings.audio.effects_volume.description": "Level of the effects bus in percent.",
+    "settings.audio.effects_volume.label": "Effects volume",
     "settings.audio.master_volume.description": "Overall output level in percent.",
     "settings.audio.master_volume.label": "Master volume",
+    "settings.audio.music_volume.description": "Level of the music bus in percent.",
+    "settings.audio.music_volume.label": "Music volume",
+    "settings.audio.mute.description": "Silence all output without changing the volume levels.",
+    "settings.audio.mute.label": "Mute",
     "settings.audio.sample_rate.description": "Output sample rate of the audio device.",
     "settings.audio.sample_rate.label": "Sample rate",
     "settings.capability.renderer.hdr": "HDR output from the renderer",
