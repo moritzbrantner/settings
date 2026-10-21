@@ -69,6 +69,8 @@ The first supported control is `SettingsBooleanField`, which maps a boolean defi
 
 `web/playground/` is a separate example application, the realistic dogfooding consumer next to the small reference UI. It imports only `@moritzbrantner/settings-browser` (resolved to the package assembled from this commit) and `@moritzbrantner/ui` stable primitives, pinned to a `ui` commit as a git dependency. It loads `fixtures/presentation/playground.json` at runtime as `playground-settings.json` and covers every setting kind with exact numeric entry, category navigation and search, scope/apply-mode/provenance/modified state, availability reasons, Apply/Cancel, restart/reconnect notices and per-setting, section and global reset.
 
+The Graphics category renders a live scene through the commit-pinned `3d-lab` renderer (`@moritzbrantner/three-d-renderer`). `src/graphics.ts` translates committed values into renderer commands: fog applies immediately; field of view, render scale, anti-aliasing and shadows apply after Apply (the last two recreate the renderer). Features the renderer lacks (VSync/present mode, HDR, upscaling) are reported as missing capabilities and stay disabled, and a window-mode change uses the Fullscreen API with a 15-second confirm-or-revert.
+
 ```bash
 cd web/playground
 bun install --frozen-lockfile

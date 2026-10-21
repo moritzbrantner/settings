@@ -6,17 +6,40 @@ import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
   BrowserSettingsSession,
   PresentationEntry,
+  SettingChange,
   SettingDefinition,
   SettingState,
   SettingValue,
 } from '@moritzbrantner/settings-browser';
 import { Button, Input } from '@moritzbrantner/ui/stable';
+import { GraphicsPreview } from './GraphicsPreview';
+import { rendererConfig } from './graphics';
 import { SettingRow } from './SettingRow';
 import { createLocalize, reasonText, sameValue, type PlaygroundFixture } from './model';
 
 export interface AppProps {
   session: BrowserSettingsSession;
   fixture: PlaygroundFixture;
+  /** Whether the browser reported WebGL 2, which the 3d-lab preview requires. */
+  webgl: boolean;
+}
+
+const GRAPHICS_CATEGORY = 'settings.category.graphics';
+const WINDOW_MODE = 'video.window_mode';
+const DISPLAY_CONFIRM_MS = 15_000;
+
+/** A display change awaiting confirmation; `deadline` is on the monotonic `performance.now()` clock. */
+interface DisplayConfirmation {
+  before: SettingChange;
+  deadline: number;
+}
+
+/** Browser application of the window mode: borderless and fullscreen both use the Fullscreen API. */
+function showWindowMode(value: SettingValue): Promise<void> {
+  const fullscreen = value.type === 'choice' && value.value !== 'windowed';
+  if (fullscreen && !document.fullscreenElement) return document.documentElement.requestFullscreen();
+  if (!fullscreen && document.fullscreenElement) return document.exitFullscreen();
+  return Promise.resolve();
 }
 
 interface Category {
@@ -24,7 +47,7 @@ interface Category {
   name: string;
 }
 
-export function App({ session, fixture }: AppProps) {
+export function App({ session, fixture, webgl }: AppProps) {
   const localize = useMemo(() => createLocalize(fixture.localizations), [fixture]);
   const definitions = useMemo(
     () => new Map(fixture.definitions.map((definition) => [definition.id, definition])),
@@ -61,9 +84,49 @@ export function App({ session, fixture }: AppProps) {
   const stagedCount = [...states.values()].filter((state) => state.staged).length;
 
   useAppearance(committed);
+  const graphics = useMemo(() => rendererConfig(committed), [committed]);
 
   const refresh = () => setRevision((value) => value + 1);
   const remount = () => setEpoch((value) => value + 1);
+
+  // Caller-driven timed safety confirmation for the one risky display change the browser can make.
+  const [displayConfirm, setDisplayConfirm] = useState<DisplayConfirmation | null>(null);
+  const [displayNotice, setDisplayNotice] = useState<string | null>(null);
+  const [clock, setClock] = useState(() => performance.now());
+
+  function revertWindowMode(change: SettingChange, notice: string) {
+    // Restore the previous committed state; a previous default means removing the override.
+    if (change.before_provenance.type === 'default') session.reset(WINDOW_MODE);
+    else session.set(WINDOW_MODE, change.before);
+    setDisplayConfirm(null);
+    setDisplayNotice(notice);
+    void showWindowMode(change.before).catch(() => undefined);
+    remount();
+    refresh();
+  }
+
+  function applyCommitted(changes: SettingChange[]) {
+    const change = changes.find((candidate) => candidate.id === WINDOW_MODE);
+    if (!change) return;
+    setDisplayNotice(null);
+    setDisplayConfirm({ before: change, deadline: performance.now() + DISPLAY_CONFIRM_MS });
+    showWindowMode(change.after).catch((cause: unknown) =>
+      revertWindowMode(change, `The browser refused the display change (${String(cause)}); the previous window mode was restored.`),
+    );
+  }
+
+  useEffect(() => {
+    if (!displayConfirm) return;
+    const timer = setInterval(() => {
+      const now = performance.now();
+      if (now >= displayConfirm.deadline) {
+        revertWindowMode(displayConfirm.before, 'The display change was not confirmed and has been reverted.');
+      } else {
+        setClock(now);
+      }
+    }, 250);
+    return () => clearInterval(timer);
+  }, [displayConfirm]);
 
   function edit(definition: SettingDefinition, value: SettingValue) {
     if (definition.apply_mode === 'immediate') session.set(definition.id, value);
@@ -93,7 +156,7 @@ export function App({ session, fixture }: AppProps) {
   }
 
   function apply() {
-    session.applyStaged();
+    applyCommitted(session.applyStaged());
     remount();
     refresh();
   }
@@ -173,6 +236,29 @@ export function App({ session, fixture }: AppProps) {
           names={restartPending.map((definition) => labels.get(definition.id) ?? definition.id)}
         />
       )}
+      {displayConfirm && (
+        <div role="alert" className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/60 p-3 text-sm">
+          <p className="mr-auto min-w-0">
+            Keep this window mode? Reverting in {Math.max(0, Math.ceil((displayConfirm.deadline - clock) / 1000))} s.
+          </p>
+          <Button type="button" size="sm" onClick={() => setDisplayConfirm(null)}>
+            Keep window mode
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => revertWindowMode(displayConfirm.before, 'The previous window mode was restored.')}
+          >
+            Revert now
+          </Button>
+        </div>
+      )}
+      {displayNotice && !displayConfirm && (
+        <p role="status" className="min-w-0 text-sm text-muted-foreground">
+          {displayNotice}
+        </p>
+      )}
       {reconnectPending.length > 0 && (
         <RuntimeNotice
           title="Reconnect required"
@@ -227,6 +313,7 @@ export function App({ session, fixture }: AppProps) {
                   Reset {activeName} section
                 </Button>
               </div>
+              {activeCategory === GRAPHICS_CATEGORY && <GraphicsPreview config={graphics} webgl={webgl} />}
               <CategoryRows entries={visible} localize={localize} renderRow={renderRow} />
             </section>
           )}

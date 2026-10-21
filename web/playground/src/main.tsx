@@ -2,21 +2,11 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createSettingsSession } from '@moritzbrantner/settings-browser';
 import { App } from './App';
+import { detectRendererCapabilities } from './graphics';
 import type { PlaygroundFixture } from './model';
 import './styles.css';
 
 const FIXTURE_URL = 'playground-settings.json';
-
-/** Opaque capability facts the browser can report; absent facts stay unknown. */
-function detectCapabilities(): Record<string, boolean> {
-  const facts: Record<string, boolean> = {};
-  const high = matchMedia('(dynamic-range: high)');
-  const standard = matchMedia('(dynamic-range: standard)');
-  if (high.media !== 'not all' && (high.matches || standard.matches)) {
-    facts['renderer.hdr'] = high.matches;
-  }
-  return facts;
-}
 
 async function start(): Promise<void> {
   const container = document.getElementById('root');
@@ -27,10 +17,11 @@ async function start(): Promise<void> {
     if (!response.ok) throw new Error(`failed to load ${FIXTURE_URL}: ${response.status}`);
     const fixture = (await response.json()) as PlaygroundFixture;
     const session = await createSettingsSession(fixture.definitions, fixture.presentation);
-    session.setCapabilities(detectCapabilities());
+    const capabilities = detectRendererCapabilities();
+    session.setCapabilities(capabilities);
     root.render(
       <StrictMode>
-        <App session={session} fixture={fixture} />
+        <App session={session} fixture={fixture} webgl={capabilities['renderer.webgl'] === true} />
       </StrictMode>,
     );
   } catch (error) {
