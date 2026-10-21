@@ -5,6 +5,8 @@
     "": {
       "name": "@moritzbrantner/settings-playground",
       "dependencies": {
+        "@moritzbrantner/input-bindings": "github:moritzbrantner/input-bindings#5e4f5fcb3e5aa70ad6131a2e9d2f902462092347",
+        "@moritzbrantner/input-bindings-react": "github:moritzbrantner/input-bindings#3082a0b30ff57b428336e0fda9d1b584dc6ee9e8",
         "@moritzbrantner/three-d-renderer": "github:moritzbrantner/3d-lab#235774615f1367065093deb6988f5217bdf4d7e1",
         "@moritzbrantner/ui": "git+https://github.com/moritzbrantner/ui.git#35ea57483456d4b6ecf233c8dae5a6e4eba5c661",
         "react": "19.3.1",
@@ -64,6 +66,14 @@
     "@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.6.0", "", {}, "sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw=="],
 
     "@jridgewell/trace-mapping": ["@jridgewell/trace-mapping@0.3.31", "", { "dependencies": { "@jridgewell/resolve-uri": "^3.1.0", "@jridgewell/sourcemap-codec": "^1.4.14" } }, "sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw=="],
+
+    "@moritzbrantner/input-bindings": ["@moritzbrantner/input-bindings@github:moritzbrantner/input-bindings#5e4f5fc", {}, "moritzbrantner-input-bindings-5e4f5fc", "sha512-7dClsT5QUm9ssh3It0tH0ZuojBbeGFprlPkgUsPtBHxFdDOy+bTeH1tdo++rgvfpFC71yhwpXTwycmmPjalf2A=="],
+
+    "@moritzbrantner/input-bindings-react": ["@moritzbrantner/input-bindings-react@github:moritzbrantner/input-bindings#3082a0b", { "dependencies": { "@moritzbrantner/input-bindings": "github:moritzbrantner/input-bindings#5e4f5fcb3e5aa70ad6131a2e9d2f902462092347", "@moritzbrantner/input-bindings-runtime": "github:moritzbrantner/input-bindings#fc4d700a19cf8ca7a7c3a3a2cbc68247f710fec0", "@moritzbrantner/input-bindings-web": "github:moritzbrantner/input-bindings#753aa60b54314597363e9ab2ee3429fdfae37097" }, "peerDependencies": { "react": ">=19" } }, "moritzbrantner-input-bindings-3082a0b", "sha512-IsBgWfoMLo5ZPJ4Ing+XgwhEbNwdMEGsgMAnDibApQ4SZUW4cu9lIItr/mzM3lK4nx4se0AEvxAUEqnKLaERkw=="],
+
+    "@moritzbrantner/input-bindings-runtime": ["@moritzbrantner/input-bindings-runtime@github:moritzbrantner/input-bindings#fc4d700", { "dependencies": { "@moritzbrantner/input-bindings": "github:moritzbrantner/input-bindings#5e4f5fcb3e5aa70ad6131a2e9d2f902462092347" } }, "moritzbrantner-input-bindings-fc4d700", "sha512-gJEikgCgfmii5ho0Zjlnr7qvvb2AUsatx+0m73F1kbOfGXV7bLXObQFt81fTCAIuHbyBdDIReeWWQ9j/LLHJ6Q=="],
+
+    "@moritzbrantner/input-bindings-web": ["@moritzbrantner/input-bindings-web@github:moritzbrantner/input-bindings#753aa60", { "dependencies": { "@moritzbrantner/input-bindings": "github:moritzbrantner/input-bindings#5e4f5fcb3e5aa70ad6131a2e9d2f902462092347", "@moritzbrantner/input-bindings-runtime": "github:moritzbrantner/input-bindings#fc4d700a19cf8ca7a7c3a3a2cbc68247f710fec0" } }, "moritzbrantner-input-bindings-753aa60", "sha512-PI5uEYG418KYIG96571LM3NAsMrb5ASjPGNPnS3CXMpnI2nS3fRvFQwR2BGwNuWZ2aXhQgcxqo0Q7cSYSCKMDA=="],
 
     "@moritzbrantner/three-d-renderer": ["@moritzbrantner/three-d-renderer@github:moritzbrantner/3d-lab#2357746", { "dependencies": { "three": "0.186.1" } }, "moritzbrantner-3d-lab-2357746", "sha512-WCsapeHt1tKhNQ1bNYKKQ9BLeR7QNOElAvtXLcgdPnIDy6g43xOVwHsUwQ3M6zAVt6LkeiyEWAoOJsQ55vCjvw=="],
 

@@ -71,6 +71,8 @@ The first supported control is `SettingsBooleanField`, which maps a boolean defi
 
 The Graphics category renders a live scene through the commit-pinned `3d-lab` renderer (`@moritzbrantner/three-d-renderer`). `src/graphics.ts` translates committed values into renderer commands: fog applies immediately; field of view, render scale, anti-aliasing and shadows apply after Apply (the last two recreate the renderer). Features the renderer lacks (VSync/present mode, HDR, upscaling) are reported as missing capabilities and stay disabled, and a window-mode change uses the Fullscreen API with a 15-second confirm-or-revert.
 
+The Controls category composes the commit-pinned `input-bindings` workbench (`@moritzbrantner/input-bindings-react`). The fixture's `input_bindings_surfaces` entry carries only the opaque `InputBindingsIntegrationDescriptor`; `src/controls.ts` resolves it to the playground's action registry and stores the binding profile as an `input-bindings` portable configuration. Bindings, conflicts and binding reset stay in that editor, while look sensitivity, invert and deadzone remain ordinary settings with their own reset.
+
 ```bash
 cd web/playground
 bun install --frozen-lockfile
