@@ -12,6 +12,8 @@ import type {
   SettingValue,
 } from '@moritzbrantner/settings-browser';
 import { Button, Input } from '@moritzbrantner/ui/stable';
+import { audioMix, PREVIEWED_AUDIO, sampleRateOf } from './audio';
+import { AudioPreview } from './AudioPreview';
 import { ControlsBindings } from './ControlsBindings';
 import { GraphicsPreview } from './GraphicsPreview';
 import { rendererConfig } from './graphics';
@@ -26,6 +28,8 @@ export interface AppProps {
 }
 
 const GRAPHICS_CATEGORY = 'settings.category.graphics';
+const AUDIO_CATEGORY = 'settings.category.audio';
+const PREVIEWED = new Set(PREVIEWED_AUDIO);
 const WINDOW_MODE = 'video.window_mode';
 const DISPLAY_CONFIRM_MS = 15_000;
 
@@ -86,6 +90,11 @@ export function App({ session, fixture, webgl }: AppProps) {
 
   useAppearance(committed);
   const graphics = useMemo(() => rendererConfig(committed), [committed]);
+  // Previewed audio follows the staged values, so Cancel's revert to the committed state is heard.
+  const mix = useMemo(
+    () => audioMix(Object.fromEntries(PREVIEWED_AUDIO.map((id) => [id, states.get(id)?.value]))),
+    [states],
+  );
 
   const refresh = () => setRevision((value) => value + 1);
   const remount = () => setEpoch((value) => value + 1);
@@ -129,14 +138,18 @@ export function App({ session, fixture, webgl }: AppProps) {
     return () => clearInterval(timer);
   }, [displayConfirm]);
 
+  /** Immediate settings commit at once, except previewed ones, which stay staged until Apply. */
+  const commitsImmediately = (definition: SettingDefinition) =>
+    definition.apply_mode === 'immediate' && !PREVIEWED.has(definition.id);
+
   function edit(definition: SettingDefinition, value: SettingValue) {
-    if (definition.apply_mode === 'immediate') session.set(definition.id, value);
+    if (commitsImmediately(definition)) session.set(definition.id, value);
     else session.stageSet(definition.id, value);
     refresh();
   }
 
   function resetOne(definition: SettingDefinition) {
-    if (definition.apply_mode === 'immediate') session.reset(definition.id);
+    if (commitsImmediately(definition)) session.reset(definition.id);
     else session.stageResetMany([definition.id]);
     remount();
     refresh();
@@ -315,6 +328,9 @@ export function App({ session, fixture, webgl }: AppProps) {
                 </Button>
               </div>
               {activeCategory === GRAPHICS_CATEGORY && <GraphicsPreview config={graphics} webgl={webgl} />}
+              {activeCategory === AUDIO_CATEGORY && (
+                <AudioPreview mix={mix} sampleRate={sampleRateOf(launchValues)} />
+              )}
               {(fixture.input_bindings_surfaces ?? [])
                 .filter((surface) => surface.category_key === activeCategory)
                 .map((surface) => (
