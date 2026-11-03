@@ -81,6 +81,8 @@ bun run serve:e2e                    # production build served at http://127.0.0
 bunx playwright test --workers=1     # browser journeys (starts serve:e2e)
 ```
 
+The independent XState contract in `web/playground/e2e/settings-machine.spec.ts` generates bounded Playwright paths for editing, staging, Apply, Cancel, and reset. It asserts the visible setting value and available actions after every transition without importing the application's transition logic. Run only those paths with `bunx playwright test --grep '@state:settings'` from `web/playground/`; they use the existing browser test server and CI gate.
+
 ## Workspace
 
 ```text
