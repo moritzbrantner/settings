@@ -425,6 +425,53 @@
       "apply_mode": "immediate"
     },
     {
+      "id": "video.object_density",
+      "kind": {
+        "type": "choice",
+        "options": [
+          "low",
+          "medium",
+          "high"
+        ]
+      },
+      "default": {
+        "type": "choice",
+        "value": "medium"
+      },
+      "scope": "device",
+      "apply_mode": "apply",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.webgl",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
+      "id": "video.draw_distance",
+      "kind": {
+        "type": "integer",
+        "min": 20,
+        "max": 120
+      },
+      "default": {
+        "type": "integer",
+        "value": 80
+      },
+      "scope": "device",
+      "apply_mode": "immediate",
+      "availability": {
+        "condition": {
+          "op": "capability",
+          "id": "renderer.webgl",
+          "expected": true
+        },
+        "when_unavailable": "disable"
+      }
+    },
+    {
       "id": "network.region",
       "kind": {
         "type": "choice",
@@ -846,6 +893,34 @@
       }
     },
     {
+      "id": "video.object_density",
+      "metadata": {
+        "label_key": "settings.video.object_density.label",
+        "description_key": "settings.video.object_density.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 70,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.foliage"
+        ]
+      }
+    },
+    {
+      "id": "video.draw_distance",
+      "metadata": {
+        "label_key": "settings.video.draw_distance.label",
+        "description_key": "settings.video.draw_distance.description",
+        "category_key": "settings.category.graphics",
+        "group_key": "settings.group.quality",
+        "order": 80,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.view_distance"
+        ]
+      }
+    },
+    {
       "id": "network.region",
       "metadata": {
         "label_key": "settings.network.region.label",
@@ -1011,6 +1086,9 @@
     "settings.option.video.fog.dense": "Dense",
     "settings.option.video.fog.light": "Light",
     "settings.option.video.fog.off": "Off",
+    "settings.option.video.object_density.high": "High",
+    "settings.option.video.object_density.low": "Low",
+    "settings.option.video.object_density.medium": "Medium",
     "settings.option.video.upscaler.off": "Off",
     "settings.option.video.upscaler.spatial": "Spatial upscaler",
     "settings.option.video.upscaler.temporal": "Temporal upscaler",
@@ -1026,6 +1104,7 @@
     "settings.search.drift": "stick drift",
     "settings.search.font_size": "font size",
     "settings.search.fog": "haze",
+    "settings.search.foliage": "foliage",
     "settings.search.fov": "fov",
     "settings.search.motion_sickness": "motion sickness",
     "settings.search.nickname": "nickname",
@@ -1036,6 +1115,7 @@
     "settings.search.server": "server",
     "settings.search.sound": "sound",
     "settings.search.subtitles": "subtitles",
+    "settings.search.view_distance": "view distance",
     "settings.search.volume": "volume",
     "settings.search.window_mode": "fullscreen",
     "settings.simulation.debug_overlay.description": "Draw collision shapes and timing counters.",
@@ -1046,12 +1126,16 @@
     "settings.simulation.tick_rate.label": "Tick rate",
     "settings.video.antialias.description": "Smooth jagged edges with multisampling. Applying recreates the renderer.",
     "settings.video.antialias.label": "Anti-aliasing",
+    "settings.video.draw_distance.description": "Scene objects farther than this many metres are not drawn.",
+    "settings.video.draw_distance.label": "Draw distance",
     "settings.video.fog.description": "Distance haze in the scene.",
     "settings.video.fog.label": "Distance fog",
     "settings.video.fov.description": "Horizontal field of view in degrees.",
     "settings.video.fov.label": "Field of view",
     "settings.video.hdr.description": "Use a high dynamic range swap chain.",
     "settings.video.hdr.label": "HDR output",
+    "settings.video.object_density.description": "How many characters, trees, rocks and bushes the scene places.",
+    "settings.video.object_density.label": "Object density",
     "settings.video.render_scale.description": "Internal resolution relative to the output resolution.",
     "settings.video.render_scale.label": "Render scale",
     "settings.video.shadows.description": "Cast sun shadows. Applying recreates the renderer.",
