@@ -6,12 +6,13 @@
   "type": "module",
   "scripts": {
     "build:browser-package": "node ./scripts/build-browser-package.mjs",
-    "build": "bun run build:browser-package && vite build",
+    "build": "bun run build:browser-package && bun run fetch:scene-kit && vite build",
     "check-types": "tsc --noEmit -p tsconfig.json",
-    "dev": "bun run build:browser-package && vite",
+    "dev": "bun run build:browser-package && bun run fetch:scene-kit && vite",
+    "fetch:scene-kit": "node ./scripts/fetch-scene-kit.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 4317 --strictPort",
     "serve:e2e": "bun run build && bun run preview",
-    "test:architecture": "node --test architecture.test.mjs ../reference-ui-unchanged.test.mjs",
+    "test:architecture": "node --test architecture.test.mjs scripts/fetch-scene-kit.test.mjs ../reference-ui-unchanged.test.mjs",
     "test:e2e": "playwright test --workers=1"
   },
   "dependencies": {

@@ -3,3 +3,5 @@ dist/
 .settings-browser/
 test-results/
 playwright-report/
+.scene-kit/
+.scene-kit-cache/
