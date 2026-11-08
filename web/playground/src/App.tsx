@@ -17,6 +17,8 @@ import { AudioPreview } from './AudioPreview';
 import { ControlsBindings } from './ControlsBindings';
 import { GraphicsPreview } from './GraphicsPreview';
 import { rendererConfig } from './graphics';
+import { physicsConfig } from './physics';
+import { PhysicsPreview } from './PhysicsPreview';
 import { SettingRow } from './SettingRow';
 import { createLocalize, reasonText, sameValue, type PlaygroundFixture } from './model';
 
@@ -29,6 +31,7 @@ export interface AppProps {
 
 const GRAPHICS_CATEGORY = 'settings.category.graphics';
 const AUDIO_CATEGORY = 'settings.category.audio';
+const SIMULATION_CATEGORY = 'settings.category.simulation';
 const PREVIEWED = new Set(PREVIEWED_AUDIO);
 const WINDOW_MODE = 'video.window_mode';
 const DISPLAY_CONFIRM_MS = 15_000;
@@ -90,6 +93,7 @@ export function App({ session, fixture, webgl }: AppProps) {
 
   useAppearance(committed);
   const graphics = useMemo(() => rendererConfig(committed), [committed]);
+  const physics = useMemo(() => physicsConfig(committed), [committed]);
   // Previewed audio follows the staged values, so Cancel's revert to the committed state is heard.
   const mix = useMemo(
     () => audioMix(Object.fromEntries(PREVIEWED_AUDIO.map((id) => [id, states.get(id)?.value]))),
@@ -328,6 +332,9 @@ export function App({ session, fixture, webgl }: AppProps) {
                 </Button>
               </div>
               {activeCategory === GRAPHICS_CATEGORY && <GraphicsPreview config={graphics} webgl={webgl} />}
+              {activeCategory === SIMULATION_CATEGORY && (
+                <PhysicsPreview config={physics} graphics={graphics} webgl={webgl} />
+              )}
               {activeCategory === AUDIO_CATEGORY && (
                 <AudioPreview mix={mix} sampleRate={sampleRateOf(launchValues)} />
               )}

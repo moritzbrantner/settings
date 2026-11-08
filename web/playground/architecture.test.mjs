@@ -89,3 +89,14 @@ test('@moritzbrantner/ui is a commit-pinned git dependency', async () => {
     '@moritzbrantner/ui must be pinned to an exact git commit',
   );
 });
+
+// Issue #26: Rapier is reached only through the playground-owned physics adapter, pinned exactly,
+// so swapping it for physics-engine later replaces one module.
+test('Rapier is pinned and imported only by the physics adapter', async () => {
+  const manifest = JSON.parse(await readFile(join(playgroundDir, 'package.json'), 'utf8'));
+  assert.match(manifest.dependencies?.['@dimforge/rapier3d-compat'] ?? '', /^\d+\.\d+\.\d+$/);
+  const importers = (await allImports())
+    .filter(({ specifier }) => specifier.startsWith('@dimforge/'))
+    .map(({ file }) => file.slice(srcDir.length + 1));
+  assert.deepEqual([...new Set(importers)], ['physics.ts']);
+});
