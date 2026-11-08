@@ -554,6 +554,60 @@
       },
       "scope": "save",
       "apply_mode": "immediate"
+    },
+    {
+      "id": "simulation.body_count",
+      "kind": {
+        "type": "integer",
+        "min": 1,
+        "max": 48
+      },
+      "default": {
+        "type": "integer",
+        "value": 12
+      },
+      "scope": "save",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "simulation.gravity",
+      "kind": {
+        "type": "number",
+        "min": 0,
+        "max": 20
+      },
+      "default": {
+        "type": "number",
+        "value": 9.81
+      },
+      "scope": "save",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "simulation.restitution",
+      "kind": {
+        "type": "number",
+        "min": 0,
+        "max": 1
+      },
+      "default": {
+        "type": "number",
+        "value": 0.3
+      },
+      "scope": "save",
+      "apply_mode": "apply"
+    },
+    {
+      "id": "simulation.interpolation",
+      "kind": {
+        "type": "bool"
+      },
+      "default": {
+        "type": "bool",
+        "value": true
+      },
+      "scope": "user",
+      "apply_mode": "immediate"
     }
   ],
   "presentation": [
@@ -994,6 +1048,49 @@
           "settings.search.seed"
         ]
       }
+    },
+    {
+      "id": "simulation.body_count",
+      "metadata": {
+        "label_key": "settings.simulation.body_count.label",
+        "description_key": "settings.simulation.body_count.description",
+        "category_key": "settings.category.simulation",
+        "order": 40,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "simulation.gravity",
+      "metadata": {
+        "label_key": "settings.simulation.gravity.label",
+        "description_key": "settings.simulation.gravity.description",
+        "category_key": "settings.category.simulation",
+        "order": 50,
+        "discoverability": "primary"
+      }
+    },
+    {
+      "id": "simulation.restitution",
+      "metadata": {
+        "label_key": "settings.simulation.restitution.label",
+        "description_key": "settings.simulation.restitution.description",
+        "category_key": "settings.category.simulation",
+        "order": 60,
+        "discoverability": "primary",
+        "search_keys": [
+          "settings.search.bounce"
+        ]
+      }
+    },
+    {
+      "id": "simulation.interpolation",
+      "metadata": {
+        "label_key": "settings.simulation.interpolation.label",
+        "description_key": "settings.simulation.interpolation.description",
+        "category_key": "settings.category.simulation",
+        "order": 70,
+        "discoverability": "primary"
+      }
     }
   ],
   "input_bindings_surfaces": [
@@ -1099,6 +1196,7 @@
     "settings.profile.display_name.label": "Display name",
     "settings.search.aim": "aim",
     "settings.search.animation": "animation",
+    "settings.search.bounce": "bounce",
     "settings.search.colorblind": "colorblind",
     "settings.search.dark_mode": "dark mode",
     "settings.search.drift": "stick drift",
@@ -1118,10 +1216,18 @@
     "settings.search.view_distance": "view distance",
     "settings.search.volume": "volume",
     "settings.search.window_mode": "fullscreen",
+    "settings.simulation.body_count.description": "Demo bodies dropped into the physics arena. Applying rebuilds the demo world.",
+    "settings.simulation.body_count.label": "Body count",
     "settings.simulation.debug_overlay.description": "Draw collision shapes and timing counters.",
     "settings.simulation.debug_overlay.label": "Debug overlay",
+    "settings.simulation.gravity.description": "Downward acceleration of the demo world in m/s². Applied to the running world.",
+    "settings.simulation.gravity.label": "Gravity",
+    "settings.simulation.interpolation.description": "Blend the last two simulation steps when drawing; the simulation itself is unchanged.",
+    "settings.simulation.interpolation.label": "Interpolation",
     "settings.simulation.random_seed.description": "Seed used for deterministic world generation in this save.",
     "settings.simulation.random_seed.label": "Random seed",
+    "settings.simulation.restitution.description": "How much demo bodies bounce, from 0 (none) to 1. Applied to the running world.",
+    "settings.simulation.restitution.label": "Bounciness",
     "settings.simulation.tick_rate.description": "Fixed simulation steps per second for this session.",
     "settings.simulation.tick_rate.label": "Tick rate",
     "settings.video.antialias.description": "Smooth jagged edges with multisampling. Applying recreates the renderer.",

@@ -307,3 +307,37 @@ fn playground_composes_the_input_bindings_editor_into_controls_without_binding_s
         );
     }
 }
+
+#[test]
+fn playground_physics_slice_has_rebuild_in_place_and_presentation_settings() {
+    // Issue #26: the playground translates these demo settings into simulation commands; the
+    // fixture only declares their generic semantics.
+    let fixture = fixture();
+    let by_id: BTreeMap<_, _> = fixture
+        .definitions
+        .iter()
+        .map(|definition| (definition.id.as_str(), definition))
+        .collect();
+    let metadata = metadata_by_id(&fixture);
+    let expected = [
+        ("simulation.body_count", ApplyMode::Apply),
+        ("simulation.gravity", ApplyMode::Apply),
+        ("simulation.restitution", ApplyMode::Apply),
+        ("simulation.interpolation", ApplyMode::Immediate),
+        ("simulation.tick_rate", ApplyMode::Immediate),
+        ("simulation.debug_overlay", ApplyMode::Immediate),
+        ("simulation.random_seed", ApplyMode::Immediate),
+    ];
+    for (id, mode) in expected {
+        let definition = by_id
+            .get(id)
+            .unwrap_or_else(|| panic!("physics slice needs {id}"));
+        assert_eq!(definition.apply_mode, mode, "{id} apply mode");
+        assert!(definition.availability.is_none(), "{id} must stay editable");
+        assert_eq!(
+            metadata[id].category_key.as_str(),
+            "settings.category.simulation",
+            "{id} category"
+        );
+    }
+}
