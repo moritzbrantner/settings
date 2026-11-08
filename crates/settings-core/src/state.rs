@@ -229,6 +229,23 @@ impl SettingsState {
             .map(|setting_override| &setting_override.source)
     }
 
+    /// The raw value held by one transient overlay layer, even when a higher-precedence layer
+    /// masks it. Durable sources return `None`; use [`Self::override_value`] for those.
+    pub fn transient_override_value(
+        &self,
+        id: &SettingId,
+        source: &OverrideSource,
+    ) -> Option<&SettingValue> {
+        match source {
+            OverrideSource::Policy => self.policy_overrides.get(id),
+            OverrideSource::CommandLineOverride => self.command_line_overrides.get(id),
+            OverrideSource::SessionOverride => self.session_overrides.get(id),
+            OverrideSource::UserOverride
+            | OverrideSource::Preset
+            | OverrideSource::Migration { .. } => None,
+        }
+    }
+
     pub fn overrides(&self) -> impl Iterator<Item = (&SettingId, &SettingValue)> {
         self.durable_overrides
             .iter()
