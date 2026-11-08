@@ -16,7 +16,16 @@ export interface PlaygroundFixture {
   presentation: PresentationEntry[];
   /** Opaque input-bindings-owned surfaces composed into categories; no binding data. */
   input_bindings_surfaces?: InputBindingsSurface[];
+  /** Fixed named presets shipped with the fixture, applied with `preset` provenance. */
+  presets?: FixturePreset[];
   localizations: Record<string, string>;
+}
+
+export interface FixturePreset {
+  id: string;
+  label_key: string;
+  description_key?: string;
+  values: Record<string, SettingValue>;
 }
 
 export interface InputBindingsSurface {

@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createSettingsSession } from '@moritzbrantner/settings-browser';
 import { App } from './App';
 import { detectRendererCapabilities } from './graphics';
+import { applyUrlOverlays, browserStorage, loadStoredScopes } from './lab';
 import type { PlaygroundFixture } from './model';
 import './styles.css';
 
@@ -19,9 +20,21 @@ async function start(): Promise<void> {
     const session = await createSettingsSession(fixture.definitions, fixture.presentation);
     const capabilities = detectRendererCapabilities();
     session.setCapabilities(capabilities);
+    // Restore the stored durable snapshots, then layer the developer overlays from the URL on top.
+    const storage = browserStorage();
+    const startupResults = loadStoredScopes(session, storage);
+    const definitions = new Map(fixture.definitions.map((definition) => [definition.id, definition]));
+    const urlProblems = applyUrlOverlays(session, definitions, window.location.search);
     root.render(
       <StrictMode>
-        <App session={session} fixture={fixture} webgl={capabilities['renderer.webgl'] === true} />
+        <App
+          session={session}
+          fixture={fixture}
+          webgl={capabilities['renderer.webgl'] === true}
+          storage={storage}
+          startupResults={startupResults}
+          urlProblems={urlProblems}
+        />
       </StrictMode>,
     );
   } catch (error) {
