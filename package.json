@@ -1,6 +1,6 @@
 {
   "name": "@moritzbrantner/settings-browser",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Typed browser/WASM adapter and optional React UI bridge for the settings foundation",
   "license": "MIT",
   "type": "module",

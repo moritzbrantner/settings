@@ -1,4 +1,4 @@
-export const SETTINGS_BROWSER_API_VERSION: 1;
+export const SETTINGS_BROWSER_API_VERSION: 2;
 
 export type SettingScope = 'session' | 'save' | 'device' | 'user';
 export type ApplyMode = 'immediate' | 'apply' | 'restart' | 'reconnect';
@@ -76,6 +76,16 @@ export interface SettingState {
   value: SettingValue;
   committed_value: SettingValue;
   provenance: ValueProvenance;
+  /** Current consumer default. */
+  default: SettingValue;
+  /** Whether the effective staged `value` differs from `default`. */
+  differs_from_default: boolean;
+  /** Durable preference beneath any overlay (the default when no valid override exists). */
+  durable_value: SettingValue;
+  /** `user_override`, `preset`, `migration` or `default`. */
+  durable_provenance: ValueProvenance;
+  /** Transient overlays present for this setting, including ones masked by a higher layer. */
+  overlays: Partial<Record<OverlayLayer, SettingValue>>;
   /** Whether a durable override exists in the staged state. */
   overridden: boolean;
   /** Whether the staged durable layer differs from the committed one. */
@@ -93,6 +103,40 @@ export interface SettingChange {
   after_provenance: ValueProvenance;
   apply_mode: ApplyMode;
 }
+
+/**
+ * Transient runtime layers above the durable preference, in precedence order
+ * policy > command_line > session. They are never exported and survive resets and imports.
+ */
+export type OverlayLayer = 'policy' | 'command_line' | 'session';
+
+/** Canonical preset: ordinary values applied atomically with `preset` provenance. */
+export interface SettingsPreset {
+  id: string;
+  values: Record<string, SettingValue>;
+}
+
+/** Why one snapshot entry was preserved, rejected or dropped while importing. */
+export type LoadDiagnostic =
+  | { type: 'unknown_setting_preserved'; id: string }
+  | { type: 'invalid_value'; id: string; reason: string }
+  | { type: 'corrupt_value'; id: string; reason: string }
+  | { type: 'invalid_identifier'; raw_id: string; reason: string }
+  | { type: 'scope_mismatch'; id: string; expected: SettingScope; actual: SettingScope }
+  | { type: 'legacy_unknown_entry_dropped'; id: string };
+
+export interface ImportReport {
+  scope: Exclude<SettingScope, 'session'>;
+  /** Known settings whose durable override was loaded, in canonical id order. */
+  loaded: string[];
+  /** Unknown ids kept verbatim and written back by `exportScope`. */
+  preserved_unknown: string[];
+  migrations: { from_version: number; to_version: number }[];
+  diagnostics: LoadDiagnostic[];
+}
+
+/** `none` when no apply-with-confirmation is open. */
+export type ConfirmationStatus = 'none' | 'pending' | 'expired';
 
 export interface BrowserSettingsSession {
   presentation(): PresentationEntry[];
@@ -121,8 +165,45 @@ export interface BrowserSettingsSession {
   /** Replace the opaque capability facts used for availability evaluation. */
   setCapabilities(facts: Readonly<Record<string, boolean>>): void;
   settingStates(): SettingState[];
+  /**
+   * Replace one persistent scope from a snapshot; staged changes in that scope are discarded.
+   * @deprecated Returns diagnostics as debug strings; use `importScopeReport`.
+   */
   importScope(scope: SettingScope, snapshot: string): string[];
+  /**
+   * Replace one persistent scope from a snapshot (v1 snapshots are migrated) and report loaded,
+   * preserved and rejected entries. Throws for a malformed envelope, unsupported schema,
+   * mismatched scope or `session`. Overlays are kept.
+   */
+  importScopeReport(scope: SettingScope, snapshot: string): ImportReport;
+  /** Canonical delta-only snapshot of one persistent scope; throws for `session`. */
   exportScope(scope: SettingScope): string;
+  /** Apply a preset directly and atomically; returns the committed value changes. */
+  setPreset(preset: SettingsPreset): SettingChange[];
+  /** Stage a preset atomically; returns the staged value changes. */
+  stagePreset(preset: SettingsPreset): SettingChange[];
+  /** Set one transient overlay in the committed and staged state. */
+  setOverlay(layer: OverlayLayer, id: string, value: SettingValue): void;
+  /** Remove one overlay; returns whether it existed. */
+  clearOverlay(layer: OverlayLayer, id: string): boolean;
+  /** Remove every overlay of one layer, or of every layer when omitted. */
+  clearOverlays(layer?: OverlayLayer): void;
+  /**
+   * Commit the staged state like `applyStaged`, keeping the previous state until
+   * `confirmApplied` is called before `deadlineTick`. Ticks are caller-defined monotonic
+   * non-negative integers; the session never reads a clock. Throws if one is already open.
+   */
+  applyStagedWithConfirmation(deadlineTick: number): SettingChange[];
+  confirmationStatus(nowTick: number): ConfirmationStatus;
+  /** Keep the applied state; `false` when nothing is pending or it already expired. */
+  confirmApplied(nowTick: number): boolean;
+  /**
+   * When expired at `nowTick`, restore the pre-apply durable state (overlays are kept, staged
+   * edits discarded) and return the changes to undo; otherwise return `[]`.
+   */
+  rollBackExpired(nowTick: number): SettingChange[];
+  /** Restore the pre-apply durable state now; `[]` when nothing is open. */
+  revertApplied(): SettingChange[];
   dispose(): void;
 }
 

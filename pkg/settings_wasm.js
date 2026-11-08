@@ -34,6 +34,29 @@ export class SettingsSession {
         }
     }
     /**
+     * Commit the staged state, keeping a rollback until confirmed before `deadline_tick`.
+     * @param {number} deadline_tick
+     * @returns {string}
+     */
+    apply_staged_with_confirmation_json(deadline_tick) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_apply_staged_with_confirmation_json(this.__wbg_ptr, deadline_tick);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
      * Discard the staged state and return the staged-to-committed value changes.
      * @returns {string}
      */
@@ -42,6 +65,77 @@ export class SettingsSession {
         let deferred2_1;
         try {
             const ret = wasm.settingssession_cancel_staged_json(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Remove one overlay; returns whether it existed.
+     * @param {string} raw_layer
+     * @param {string} raw_id
+     * @returns {boolean}
+     */
+    clear_overlay(raw_layer, raw_id) {
+        let ptr0, len0, ptr1, len1;
+        try {
+            ptr0 = passStringToWasm0(raw_layer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len0 = WASM_VECTOR_LEN;
+            ptr1 = passStringToWasm0(raw_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len1 = WASM_VECTOR_LEN;
+        } catch (e) {
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+            throw e;
+        }
+        const ret = wasm.settingssession_clear_overlay(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return ret[0] !== 0;
+    }
+    /**
+     * Remove every overlay of one layer.
+     * @param {string} raw_layer
+     */
+    clear_overlays(raw_layer) {
+        const ptr0 = passStringToWasm0(raw_layer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.settingssession_clear_overlays(this.__wbg_ptr, ptr0, len0);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Keep the applied state; succeeds only while the confirmation is pending.
+     * @param {number} now_tick
+     * @returns {boolean}
+     */
+    confirm_applied(now_tick) {
+        const ret = wasm.settingssession_confirm_applied(this.__wbg_ptr, now_tick);
+        if (ret[2]) {
+            throw takeFromExternrefTable0(ret[1]);
+        }
+        return ret[0] !== 0;
+    }
+    /**
+     * `none`, `pending` or `expired` at the caller-supplied tick.
+     * @param {number} now_tick
+     * @returns {string}
+     */
+    confirmation_status(now_tick) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_confirmation_status(this.__wbg_ptr, now_tick);
             var ptr1 = ret[0];
             var len1 = ret[1];
             if (ret[3]) {
@@ -81,6 +175,7 @@ export class SettingsSession {
         }
     }
     /**
+     * Export one persistent scope as a canonical delta-only snapshot.
      * @param {string} raw_scope
      * @returns {string}
      */
@@ -138,6 +233,42 @@ export class SettingsSession {
                 throw e;
             }
             const ret = wasm.settingssession_import_scope_json(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+            var ptr3 = ret[0];
+            var len3 = ret[1];
+            if (ret[3]) {
+                ptr3 = 0; len3 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred4_0 = ptr3;
+            deferred4_1 = len3;
+            return getStringFromWasm0(ptr3, len3);
+        } finally {
+            wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+        }
+    }
+    /**
+     * Replace one persistent scope and return a structured load report (loaded, preserved
+     * unknown and rejected entries with reasons, migrations). Overlays survive the import.
+     * @param {string} raw_scope
+     * @param {string} json
+     * @returns {string}
+     */
+    import_scope_report_json(raw_scope, json) {
+        let deferred4_0;
+        let deferred4_1;
+        try {
+            let ptr0, len0, ptr1, len1;
+            try {
+                ptr0 = passStringToWasm0(raw_scope, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len0 = WASM_VECTOR_LEN;
+                ptr1 = passStringToWasm0(json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len1 = WASM_VECTOR_LEN;
+            } catch (e) {
+                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+                throw e;
+            }
+            const ret = wasm.settingssession_import_scope_report_json(this.__wbg_ptr, ptr0, len0, ptr1, len1);
             var ptr3 = ret[0];
             var len3 = ret[1];
             if (ret[3]) {
@@ -230,6 +361,51 @@ export class SettingsSession {
         }
     }
     /**
+     * Roll back to the pre-apply state now.
+     * @returns {string}
+     */
+    revert_applied_json() {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_revert_applied_json(this.__wbg_ptr);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Roll back to the pre-apply state if the confirmation expired at `now_tick`.
+     * @param {number} now_tick
+     * @returns {string}
+     */
+    roll_back_expired_json(now_tick) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ret = wasm.settingssession_roll_back_expired_json(this.__wbg_ptr, now_tick);
+            var ptr1 = ret[0];
+            var len1 = ret[1];
+            if (ret[3]) {
+                ptr1 = 0; len1 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred2_0 = ptr1;
+            deferred2_1 = len1;
+            return getStringFromWasm0(ptr1, len1);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
      * Replace the caller-supplied capability facts used for availability evaluation.
      * @param {string} facts_json
      */
@@ -264,6 +440,57 @@ export class SettingsSession {
         }
     }
     /**
+     * Set one `policy`, `command_line` or `session` overlay above the durable preference.
+     * @param {string} raw_layer
+     * @param {string} raw_id
+     * @param {string} value_json
+     */
+    set_overlay_json(raw_layer, raw_id, value_json) {
+        let ptr0, len0, ptr1, len1, ptr2, len2;
+        try {
+            ptr0 = passStringToWasm0(raw_layer, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len0 = WASM_VECTOR_LEN;
+            ptr1 = passStringToWasm0(raw_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len1 = WASM_VECTOR_LEN;
+            ptr2 = passStringToWasm0(value_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            len2 = WASM_VECTOR_LEN;
+        } catch (e) {
+            if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
+            if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+            if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+            throw e;
+        }
+        const ret = wasm.settingssession_set_overlay_json(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2);
+        if (ret[1]) {
+            throw takeFromExternrefTable0(ret[0]);
+        }
+    }
+    /**
+     * Apply a preset directly with `Preset` provenance; returns the committed value changes.
+     * @param {string} preset_json
+     * @returns {string}
+     */
+    set_preset_json(preset_json) {
+        let deferred3_0;
+        let deferred3_1;
+        try {
+            const ptr0 = passStringToWasm0(preset_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.settingssession_set_preset_json(this.__wbg_ptr, ptr0, len0);
+            var ptr2 = ret[0];
+            var len2 = ret[1];
+            if (ret[3]) {
+                ptr2 = 0; len2 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred3_0 = ptr2;
+            deferred3_1 = len2;
+            return getStringFromWasm0(ptr2, len2);
+        } finally {
+            wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+        }
+    }
+    /**
      * Per-setting staged value, provenance, override, staging and availability status.
      * @returns {string}
      */
@@ -283,6 +510,31 @@ export class SettingsSession {
             return getStringFromWasm0(ptr1, len1);
         } finally {
             wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Stage a preset with `Preset` provenance; returns the staged value changes.
+     * @param {string} preset_json
+     * @returns {string}
+     */
+    stage_preset_json(preset_json) {
+        let deferred3_0;
+        let deferred3_1;
+        try {
+            const ptr0 = passStringToWasm0(preset_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.settingssession_stage_preset_json(this.__wbg_ptr, ptr0, len0);
+            var ptr2 = ret[0];
+            var len2 = ret[1];
+            if (ret[3]) {
+                ptr2 = 0; len2 = 0;
+                throw takeFromExternrefTable0(ret[2]);
+            }
+            deferred3_0 = ptr2;
+            deferred3_1 = len2;
+            return getStringFromWasm0(ptr2, len2);
+        } finally {
+            wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
         }
     }
     /**

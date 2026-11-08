@@ -9,9 +9,29 @@ export class SettingsSession {
      */
     apply_staged_json(): string;
     /**
+     * Commit the staged state, keeping a rollback until confirmed before `deadline_tick`.
+     */
+    apply_staged_with_confirmation_json(deadline_tick: number): string;
+    /**
      * Discard the staged state and return the staged-to-committed value changes.
      */
     cancel_staged_json(): string;
+    /**
+     * Remove one overlay; returns whether it existed.
+     */
+    clear_overlay(raw_layer: string, raw_id: string): boolean;
+    /**
+     * Remove every overlay of one layer.
+     */
+    clear_overlays(raw_layer: string): void;
+    /**
+     * Keep the applied state; succeeds only while the confirmation is pending.
+     */
+    confirm_applied(now_tick: number): boolean;
+    /**
+     * `none`, `pending` or `expired` at the caller-supplied tick.
+     */
+    confirmation_status(now_tick: number): string;
     /**
      * Return every committed effective value keyed by stable setting id.
      *
@@ -19,6 +39,9 @@ export class SettingsSession {
      * adapters cannot accidentally erase type information.
      */
     effective_values_json(): string;
+    /**
+     * Export one persistent scope as a canonical delta-only snapshot.
+     */
     export_scope_json(raw_scope: string): string;
     /**
      * Whether any staged layered state differs from the committed state.
@@ -32,6 +55,11 @@ export class SettingsSession {
      * scope are discarded.
      */
     import_scope_json(raw_scope: string, json: string): string;
+    /**
+     * Replace one persistent scope and return a structured load report (loaded, preserved
+     * unknown and rejected entries with reasons, migrations). Overlays survive the import.
+     */
+    import_scope_report_json(raw_scope: string, json: string): string;
     /**
      * Validate and replace the presentation metadata associated with this session.
      */
@@ -54,6 +82,14 @@ export class SettingsSession {
      */
     reset_many_json(ids_json: string): void;
     /**
+     * Roll back to the pre-apply state now.
+     */
+    revert_applied_json(): string;
+    /**
+     * Roll back to the pre-apply state if the confirmation expired at `now_tick`.
+     */
+    roll_back_expired_json(now_tick: number): string;
+    /**
      * Replace the caller-supplied capability facts used for availability evaluation.
      */
     set_capabilities_json(facts_json: string): void;
@@ -62,9 +98,21 @@ export class SettingsSession {
      */
     set_json(raw_id: string, value_json: string): void;
     /**
+     * Set one `policy`, `command_line` or `session` overlay above the durable preference.
+     */
+    set_overlay_json(raw_layer: string, raw_id: string, value_json: string): void;
+    /**
+     * Apply a preset directly with `Preset` provenance; returns the committed value changes.
+     */
+    set_preset_json(preset_json: string): string;
+    /**
      * Per-setting staged value, provenance, override, staging and availability status.
      */
     setting_states_json(): string;
+    /**
+     * Stage a preset with `Preset` provenance; returns the staged value changes.
+     */
+    stage_preset_json(preset_json: string): string;
     /**
      * Stage removal of every durable override in every scope.
      */
@@ -89,20 +137,31 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_settingssession_free: (a: number, b: number) => void;
     readonly settingssession_apply_staged_json: (a: number) => [number, number, number, number];
+    readonly settingssession_apply_staged_with_confirmation_json: (a: number, b: number) => [number, number, number, number];
     readonly settingssession_cancel_staged_json: (a: number) => [number, number, number, number];
+    readonly settingssession_clear_overlay: (a: number, b: number, c: number, d: number, e: number) => [number, number, number];
+    readonly settingssession_clear_overlays: (a: number, b: number, c: number) => [number, number];
+    readonly settingssession_confirm_applied: (a: number, b: number) => [number, number, number];
+    readonly settingssession_confirmation_status: (a: number, b: number) => [number, number, number, number];
     readonly settingssession_effective_values_json: (a: number) => [number, number, number, number];
     readonly settingssession_export_scope_json: (a: number, b: number, c: number) => [number, number, number, number];
     readonly settingssession_has_staged_changes: (a: number) => number;
     readonly settingssession_import_scope_json: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+    readonly settingssession_import_scope_report_json: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
     readonly settingssession_load_presentation_json: (a: number, b: number, c: number) => [number, number];
     readonly settingssession_new: (a: number, b: number) => [number, number, number];
     readonly settingssession_presentation_json: (a: number) => [number, number, number, number];
     readonly settingssession_reset: (a: number, b: number, c: number) => [number, number];
     readonly settingssession_reset_all: (a: number) => void;
     readonly settingssession_reset_many_json: (a: number, b: number, c: number) => [number, number];
+    readonly settingssession_revert_applied_json: (a: number) => [number, number, number, number];
+    readonly settingssession_roll_back_expired_json: (a: number, b: number) => [number, number, number, number];
     readonly settingssession_set_capabilities_json: (a: number, b: number, c: number) => [number, number];
     readonly settingssession_set_json: (a: number, b: number, c: number, d: number, e: number) => [number, number];
+    readonly settingssession_set_overlay_json: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => [number, number];
+    readonly settingssession_set_preset_json: (a: number, b: number, c: number) => [number, number, number, number];
     readonly settingssession_setting_states_json: (a: number) => [number, number, number, number];
+    readonly settingssession_stage_preset_json: (a: number, b: number, c: number) => [number, number, number, number];
     readonly settingssession_stage_reset_all: (a: number) => void;
     readonly settingssession_stage_reset_many_json: (a: number, b: number, c: number) => [number, number];
     readonly settingssession_stage_set_json: (a: number, b: number, c: number, d: number, e: number) => [number, number];
