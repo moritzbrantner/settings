@@ -85,6 +85,10 @@ export default defineConfig({
     target: 'es2022',
     chunkSizeWarningLimit: 1500,
   },
+  // The retained persistence fixtures are bundled from the repository's fixtures/ directory.
+  server: {
+    fs: { allow: ['.', '../../fixtures/persistence'] },
+  },
   preview: {
     host: '127.0.0.1',
     port: 4317,

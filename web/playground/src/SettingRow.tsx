@@ -17,6 +17,7 @@ import {
   optionLabel,
   parseExact,
   rangeMessage,
+  valueLabel,
   sliderStep,
   type Localize,
 } from './model';
@@ -54,6 +55,7 @@ export function SettingRow({
       definition={definition}
       state={state}
       label={label}
+      localize={localize}
       unavailableReason={unavailableReason}
       onReset={onReset}
     />
@@ -113,15 +115,19 @@ function RowMeta({
   definition,
   state,
   label,
+  localize,
   unavailableReason,
   onReset,
 }: {
   definition: SettingDefinition;
   state: SettingState;
   label: string;
+  localize: Localize;
   unavailableReason?: string;
   onReset: () => void;
 }) {
+  // An overlay supplies the effective value; the durable preference stays beneath it.
+  const masked = Object.keys(state.overlays).length > 0;
   return (
     <div className="flex min-w-0 flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
       {/* Explicit spaces keep the badges separate words for text and assistive technology. */}
@@ -133,6 +139,18 @@ function RowMeta({
         <Badge variant="ghost">{PROVENANCE_LABEL[state.provenance.type]}</Badge>
       )}{' '}
       {state.staged && <Badge variant="default">Pending</Badge>}{' '}
+      {state.differs_from_default && (
+        <span data-testid="differs">
+          Differs from default ({valueLabel(localize, definition.id, state.default)})
+        </span>
+      )}{' '}
+      {masked && (
+        <span data-testid="durable" className="basis-full">
+          {PROVENANCE_LABEL[state.provenance.type]} is in effect; durable preference beneath:{' '}
+          {valueLabel(localize, definition.id, state.durable_value)} (
+          {PROVENANCE_LABEL[state.durable_provenance.type]}).
+        </span>
+      )}{' '}
       {unavailableReason && (
         <span className="basis-full text-xs text-muted-foreground">{unavailableReason}</span>
       )}{' '}
