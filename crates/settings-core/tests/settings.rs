@@ -358,6 +358,46 @@ fn provenance_tracks_layered_override_sources_without_destroying_durable_state()
 }
 
 #[test]
+fn masked_transient_layers_remain_queryable_per_source() {
+    let registry = registry();
+    let setting = id("audio.master_volume");
+    let mut state = SettingsState::new();
+    state
+        .set_with_source(
+            &registry,
+            &setting,
+            SettingValue::Integer(30),
+            OverrideSource::SessionOverride,
+        )
+        .unwrap();
+    state
+        .set_with_source(
+            &registry,
+            &setting,
+            SettingValue::Integer(10),
+            OverrideSource::Policy,
+        )
+        .unwrap();
+
+    assert_eq!(
+        state.transient_override_value(&setting, &OverrideSource::Policy),
+        Some(&SettingValue::Integer(10))
+    );
+    assert_eq!(
+        state.transient_override_value(&setting, &OverrideSource::SessionOverride),
+        Some(&SettingValue::Integer(30))
+    );
+    assert_eq!(
+        state.transient_override_value(&setting, &OverrideSource::CommandLineOverride),
+        None
+    );
+    assert_eq!(
+        state.transient_override_value(&setting, &OverrideSource::UserOverride),
+        None
+    );
+}
+
+#[test]
 fn session_scope_cannot_construct_preserved_entries() {
     let error = PreservedEntries::new(SettingScope::Session).unwrap_err();
     assert!(matches!(

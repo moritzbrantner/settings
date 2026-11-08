@@ -13,7 +13,8 @@ use settings_appearance::{
     install_appearance_settings,
 };
 use settings_core::{
-    ApplyMode, SettingDefinition, SettingKind, SettingsRegistry, UnavailableBehavior,
+    ApplyMode, OverrideSource, SettingDefinition, SettingKind, SettingsPreset, SettingsRegistry,
+    SettingsState, UnavailableBehavior, apply_preset,
 };
 use settings_presentation::{Discoverability, PresentationEntry, PresentationRegistry};
 use std::collections::{BTreeMap, BTreeSet};
@@ -24,7 +25,18 @@ struct PlaygroundFixture {
     presentation: Vec<PresentationEntry>,
     #[serde(default)]
     input_bindings_surfaces: Vec<InputBindingsSurface>,
+    #[serde(default)]
+    presets: Vec<FixturePreset>,
     localizations: BTreeMap<String, String>,
+}
+
+/// A fixed playground preset: canonical core preset plus consumer-owned localization keys.
+#[derive(Deserialize)]
+struct FixturePreset {
+    #[serde(flatten)]
+    preset: SettingsPreset,
+    label_key: String,
+    description_key: String,
 }
 
 /// Places an opaque input-bindings-owned surface in a playground category (issue #24).
@@ -340,4 +352,43 @@ fn playground_physics_slice_has_rebuild_in_place_and_presentation_settings() {
             "{id} category"
         );
     }
+}
+
+#[test]
+fn playground_presets_are_valid_localized_and_applied_with_preset_provenance() {
+    // Issue #28: fixed Performance/Quality presets exercise preset provenance in the browser.
+    let fixture = fixture();
+    let registry = registry(fixture.definitions.clone());
+    let ids: Vec<_> = fixture
+        .presets
+        .iter()
+        .map(|entry| entry.preset.id.as_str())
+        .collect();
+    assert_eq!(ids, ["performance", "quality"]);
+
+    for entry in &fixture.presets {
+        for key in [&entry.label_key, &entry.description_key] {
+            assert!(
+                fixture.localizations.contains_key(key),
+                "missing localization {key}"
+            );
+        }
+        let mut state = SettingsState::new();
+        apply_preset(&registry, &mut state, &entry.preset)
+            .unwrap_or_else(|error| panic!("{} must apply: {error}", entry.preset.id));
+        assert!(
+            state
+                .overrides_with_sources()
+                .all(|(_, setting_override)| setting_override.source == OverrideSource::Preset)
+        );
+        assert!(
+            state.override_count() > 0,
+            "{} changes nothing",
+            entry.preset.id
+        );
+    }
+
+    // Both presets set the same settings, so switching between them is a complete swap.
+    let keys = |index: usize| -> Vec<_> { fixture.presets[index].preset.values.keys().collect() };
+    assert_eq!(keys(0), keys(1));
 }

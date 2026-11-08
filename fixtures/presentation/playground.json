@@ -1101,6 +1101,70 @@
       }
     }
   ],
+  "presets": [
+    {
+      "id": "performance",
+      "label_key": "settings.preset.performance.label",
+      "description_key": "settings.preset.performance.description",
+      "values": {
+        "video.antialias": {
+          "type": "bool",
+          "value": false
+        },
+        "video.draw_distance": {
+          "type": "integer",
+          "value": 50
+        },
+        "video.fog": {
+          "type": "choice",
+          "value": "off"
+        },
+        "video.object_density": {
+          "type": "choice",
+          "value": "low"
+        },
+        "video.render_scale": {
+          "type": "number",
+          "value": 0.75
+        },
+        "video.shadows": {
+          "type": "bool",
+          "value": false
+        }
+      }
+    },
+    {
+      "id": "quality",
+      "label_key": "settings.preset.quality.label",
+      "description_key": "settings.preset.quality.description",
+      "values": {
+        "video.antialias": {
+          "type": "bool",
+          "value": true
+        },
+        "video.draw_distance": {
+          "type": "integer",
+          "value": 120
+        },
+        "video.fog": {
+          "type": "choice",
+          "value": "light"
+        },
+        "video.object_density": {
+          "type": "choice",
+          "value": "high"
+        },
+        "video.render_scale": {
+          "type": "number",
+          "value": 1.5
+        },
+        "video.shadows": {
+          "type": "bool",
+          "value": true
+        }
+      }
+    }
+  ],
   "localizations": {
     "settings.accessibility.captions.description": "Show dialogue and important sound cues as on-screen text.",
     "settings.accessibility.captions.label": "Captions",
@@ -1192,6 +1256,10 @@
     "settings.option.video.window_mode.borderless": "Borderless",
     "settings.option.video.window_mode.fullscreen": "Fullscreen",
     "settings.option.video.window_mode.windowed": "Windowed",
+    "settings.preset.performance.description": "Lower render scale, draw distance and density; no shadows, anti-aliasing or fog.",
+    "settings.preset.performance.label": "Performance",
+    "settings.preset.quality.description": "Higher render scale, full draw distance and density with shadows and anti-aliasing.",
+    "settings.preset.quality.label": "Quality",
     "settings.profile.display_name.description": "Name shown to other players; 3 to 24 characters.",
     "settings.profile.display_name.label": "Display name",
     "settings.search.aim": "aim",
