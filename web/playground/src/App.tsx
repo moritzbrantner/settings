@@ -2,7 +2,7 @@
 // notices and per-setting, section and global reset. Every value, override, provenance and
 // availability fact comes from the settings session; this component only decides presentation
 // and routes edits by apply mode (immediate edits commit, all others are staged).
-import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type {
   BrowserSettingsSession,
   PresentationEntry,
@@ -20,13 +20,38 @@ import { rendererConfig } from './graphics';
 import { physicsConfig } from './physics';
 import { PhysicsPreview } from './PhysicsPreview';
 import { SettingRow } from './SettingRow';
-import { createLocalize, reasonText, sameValue, type PlaygroundFixture } from './model';
+import { createConsumerAdapter } from './consumerAdapter';
+import { DeveloperTools } from './DeveloperTools';
+import {
+  captureProfile,
+  clearStoredScopes,
+  errorText,
+  loadProfile,
+  readProfiles,
+  storeScopes,
+  writeProfiles,
+  type LoadResult,
+  type Profiles,
+} from './lab';
+import {
+  createLocalize,
+  reasonText,
+  sameValue,
+  type FixturePreset,
+  type PlaygroundFixture,
+} from './model';
 
 export interface AppProps {
   session: BrowserSettingsSession;
   fixture: PlaygroundFixture;
   /** Whether the browser reported WebGL 2, which the 3d-lab preview requires. */
   webgl: boolean;
+  /** `localStorage`, or `undefined` when the browser denies it. */
+  storage?: Storage;
+  /** Outcome of restoring the stored snapshots at startup. */
+  startupResults?: LoadResult[];
+  /** URL overlay parameters that were not applied. */
+  urlProblems?: string[];
 }
 
 const GRAPHICS_CATEGORY = 'settings.category.graphics';
@@ -34,13 +59,11 @@ const AUDIO_CATEGORY = 'settings.category.audio';
 const SIMULATION_CATEGORY = 'settings.category.simulation';
 const PREVIEWED = new Set(PREVIEWED_AUDIO);
 const WINDOW_MODE = 'video.window_mode';
-const DISPLAY_CONFIRM_MS = 15_000;
-
-/** A display change awaiting confirmation; `deadline` is on the monotonic `performance.now()` clock. */
-interface DisplayConfirmation {
-  before: SettingChange;
-  deadline: number;
-}
+/** Changes the playground always applies with confirmation, because they can leave it unusable. */
+const RISKY = new Set([WINDOW_MODE]);
+/** The playground's monotonic tick is one second; a confirmation stays open for 15 ticks. */
+const TICK_MS = 1_000;
+const CONFIRM_TICKS = 15;
 
 /** Browser application of the window mode: borderless and fullscreen both use the Fullscreen API. */
 function showWindowMode(value: SettingValue): Promise<void> {
@@ -55,7 +78,14 @@ interface Category {
   name: string;
 }
 
-export function App({ session, fixture, webgl }: AppProps) {
+export function App({
+  session,
+  fixture,
+  webgl,
+  storage,
+  startupResults = [],
+  urlProblems = [],
+}: AppProps) {
   const localize = useMemo(() => createLocalize(fixture.localizations), [fixture]);
   const definitions = useMemo(
     () => new Map(fixture.definitions.map((definition) => [definition.id, definition])),
@@ -90,6 +120,10 @@ export function App({ session, fixture, webgl }: AppProps) {
     return session.hasStagedChanges();
   }, [session, revision]);
   const stagedCount = [...states.values()].filter((state) => state.staged).length;
+  const stagedChanges = useMemo(() => {
+    void revision;
+    return session.stagedChanges();
+  }, [session, revision]);
 
   useAppearance(committed);
   const graphics = useMemo(() => rendererConfig(committed), [committed]);
@@ -103,44 +137,112 @@ export function App({ session, fixture, webgl }: AppProps) {
   const refresh = () => setRevision((value) => value + 1);
   const remount = () => setEpoch((value) => value + 1);
 
-  // Caller-driven timed safety confirmation for the one risky display change the browser can make.
-  const [displayConfirm, setDisplayConfirm] = useState<DisplayConfirmation | null>(null);
-  const [displayNotice, setDisplayNotice] = useState<string | null>(null);
-  const [clock, setClock] = useState(() => performance.now());
+  // Apply with confirmation, driven by the playground's own monotonic tick (one per second while a
+  // confirmation is open). The session decides pending/expired from the ticks it is given and never
+  // reads a clock, so tests drive it deterministically with a fake browser clock.
+  const tickRef = useRef(0);
+  const [tick, setTick] = useState(0);
+  const [deadline, setDeadline] = useState<number | null>(null);
+  const confirming = deadline !== null;
+  const [notice, setNotice] = useState<string | null>(null);
+  const [simulateFailure, setSimulateFailure] = useState(false);
+  const simulateFailureRef = useRef(false);
+  simulateFailureRef.current = simulateFailure;
+  const adapter = useMemo(() => createConsumerAdapter(() => simulateFailureRef.current), []);
 
-  function revertWindowMode(change: SettingChange, notice: string) {
-    // Restore the previous committed state; a previous default means removing the override.
-    if (change.before_provenance.type === 'default') session.reset(WINDOW_MODE);
-    else session.set(WINDOW_MODE, change.before);
-    setDisplayConfirm(null);
-    setDisplayNotice(notice);
-    void showWindowMode(change.before).catch(() => undefined);
+  const [loadResults, setLoadResults] = useState<LoadResult[]>(startupResults);
+  const [profiles, setProfiles] = useState<Profiles>(() => readProfiles(storage));
+
+  /** The session restored the pre-apply state; undo what the browser already showed. */
+  function restored(changes: SettingChange[], message: string) {
+    const windowMode = changes.find((change) => change.id === WINDOW_MODE);
+    if (windowMode) void showWindowMode(windowMode.after).catch(() => undefined);
+    setDeadline(null);
+    setNotice(message);
     remount();
     refresh();
   }
 
-  function applyCommitted(changes: SettingChange[]) {
-    const change = changes.find((candidate) => candidate.id === WINDOW_MODE);
-    if (!change) return;
-    setDisplayNotice(null);
-    setDisplayConfirm({ before: change, deadline: performance.now() + DISPLAY_CONFIRM_MS });
-    showWindowMode(change.after).catch((cause: unknown) =>
-      revertWindowMode(change, `The browser refused the display change (${String(cause)}); the previous window mode was restored.`),
-    );
+  function apply(withConfirmation: boolean) {
+    const changes = session.applyStagedWithConfirmation(tickRef.current + CONFIRM_TICKS);
+    try {
+      adapter.apply(changes);
+    } catch (cause) {
+      restored(
+        session.revertApplied(),
+        `The consumer could not apply the changes (${errorText(cause)}); the previous values were restored.`,
+      );
+      return;
+    }
+    if (withConfirmation || changes.some((change) => RISKY.has(change.id))) {
+      setDeadline(tickRef.current + CONFIRM_TICKS);
+      setNotice(null);
+    } else {
+      session.confirmApplied(tickRef.current);
+    }
+    const windowMode = changes.find((change) => change.id === WINDOW_MODE);
+    if (windowMode) {
+      showWindowMode(windowMode.after).catch((cause: unknown) => {
+        if (session.confirmationStatus(tickRef.current) === 'none') return;
+        restored(
+          session.revertApplied(),
+          `The browser refused the display change (${errorText(cause)}); the previous values were restored.`,
+        );
+      });
+    }
+    remount();
+    refresh();
+  }
+
+  function keepApplied() {
+    if (session.confirmApplied(tickRef.current)) setNotice('The applied changes were kept.');
+    setDeadline(null);
+    refresh();
   }
 
   useEffect(() => {
-    if (!displayConfirm) return;
+    if (deadline === null) return;
     const timer = setInterval(() => {
-      const now = performance.now();
-      if (now >= displayConfirm.deadline) {
-        revertWindowMode(displayConfirm.before, 'The display change was not confirmed and has been reverted.');
-      } else {
-        setClock(now);
+      const now = (tickRef.current += 1);
+      setTick(now);
+      if (session.confirmationStatus(now) === 'expired') {
+        const changes = session.rollBackExpired(now);
+        restored(
+          changes,
+          `Not confirmed in time; ${changes.length} ${changes.length === 1 ? 'change was' : 'changes were'} rolled back.`,
+        );
       }
-    }, 250);
+    }, TICK_MS);
     return () => clearInterval(timer);
-  }, [displayConfirm]);
+  }, [deadline, session]);
+
+  // Persist the committed durable scopes, but never an unconfirmed candidate.
+  useEffect(() => {
+    if (session.confirmationStatus(tickRef.current) === 'none') storeScopes(session, storage);
+  }, [revision, deadline, session, storage]);
+
+  function loaded(results: LoadResult[]) {
+    setLoadResults(results);
+    remount();
+    refresh();
+  }
+
+  function stagePreset(preset: FixturePreset) {
+    try {
+      session.stagePreset({ id: preset.id, values: preset.values });
+      setNotice(null);
+    } catch (cause) {
+      setNotice(`The ${localize(preset.label_key)} preset was rejected: ${errorText(cause)}.`);
+    }
+    remount();
+    refresh();
+  }
+
+  function saveProfiles(next: Profiles) {
+    setProfiles(next);
+    writeProfiles(storage, next);
+  }
+
 
   /** Immediate settings commit at once, except previewed ones, which stay staged until Apply. */
   const commitsImmediately = (definition: SettingDefinition) =>
@@ -173,11 +275,6 @@ export function App({ session, fixture, webgl }: AppProps) {
     refresh();
   }
 
-  function apply() {
-    applyCommitted(session.applyStaged());
-    remount();
-    refresh();
-  }
 
   function cancel() {
     session.cancelStaged();
@@ -245,6 +342,41 @@ export function App({ session, fixture, webgl }: AppProps) {
             Reset all settings
           </Button>
         </div>
+        <DeveloperTools
+          session={session}
+          definitions={definitions}
+          states={states}
+          stagedChanges={stagedChanges}
+          presets={fixture.presets ?? []}
+          localize={localize}
+          labels={labels}
+          revision={revision}
+          persisted={storage !== undefined}
+          loadResults={loadResults}
+          urlProblems={urlProblems}
+          profiles={profiles}
+          simulateFailure={simulateFailure}
+          onSimulateFailure={setSimulateFailure}
+          onLoaded={loaded}
+          onStagePreset={stagePreset}
+          onSaveProfile={(name) => saveProfiles({ ...profiles, [name]: captureProfile(session) })}
+          onLoadProfile={(name) => {
+            const profile = profiles[name];
+            if (profile) loaded(loadProfile(session, name, profile));
+          }}
+          onDeleteProfile={(name) => {
+            const { [name]: _removed, ...rest } = profiles;
+            saveProfiles(rest);
+          }}
+          onClearStorage={() => {
+            clearStoredScopes(storage);
+            setNotice('Stored snapshots were removed; the next change stores them again.');
+          }}
+          onChanged={() => {
+            remount();
+            refresh();
+          }}
+        />
       </header>
 
       {restartPending.length > 0 && (
@@ -254,27 +386,27 @@ export function App({ session, fixture, webgl }: AppProps) {
           names={restartPending.map((definition) => labels.get(definition.id) ?? definition.id)}
         />
       )}
-      {displayConfirm && (
+      {deadline !== null && (
         <div role="alert" className="flex min-w-0 flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/60 p-3 text-sm">
           <p className="mr-auto min-w-0">
-            Keep this window mode? Reverting in {Math.max(0, Math.ceil((displayConfirm.deadline - clock) / 1000))} s.
+            Keep the applied changes? Reverting in {Math.max(0, deadline - tick)} s.
           </p>
-          <Button type="button" size="sm" onClick={() => setDisplayConfirm(null)}>
-            Keep window mode
+          <Button type="button" size="sm" onClick={keepApplied}>
+            Keep changes
           </Button>
           <Button
             type="button"
             size="sm"
             variant="outline"
-            onClick={() => revertWindowMode(displayConfirm.before, 'The previous window mode was restored.')}
+            onClick={() => restored(session.revertApplied(), 'The previous values were restored.')}
           >
             Revert now
           </Button>
         </div>
       )}
-      {displayNotice && !displayConfirm && (
+      {notice && deadline === null && (
         <p role="status" className="min-w-0 text-sm text-muted-foreground">
-          {displayNotice}
+          {notice}
         </p>
       )}
       {reconnectPending.length > 0 && (
@@ -359,8 +491,11 @@ export function App({ session, fixture, webgl }: AppProps) {
           <Button type="button" variant="outline" disabled={!hasStaged} onClick={cancel}>
             Cancel
           </Button>
-          <Button type="button" disabled={!hasStaged} onClick={apply}>
+          <Button type="button" disabled={!hasStaged || confirming} onClick={() => apply(false)}>
             Apply
+          </Button>
+          <Button type="button" variant="secondary" disabled={!hasStaged || confirming} onClick={() => apply(true)}>
+            Apply with confirmation
           </Button>
         </div>
       </div>
