@@ -39,8 +39,12 @@ jobs:
 
   validate-pages:
     if: github.event_name == 'pull_request'
+    # A called workflow may not request more than its caller grants. The Pages scopes are only
+    # used by pages.yml's `deploy` job, which runs on push to main and is skipped here.
     permissions:
       contents: write
+      pages: write
+      id-token: write
     uses: ./.github/workflows/pages.yml
 
   merge-ready:

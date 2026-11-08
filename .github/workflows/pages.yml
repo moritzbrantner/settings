@@ -185,6 +185,13 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       - name: Settings Playground browser journeys
         run: bunx playwright test --workers=1
+      - name: Upload desktop and mobile screenshots
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        if: always()
+        with:
+          name: settings-playground-screenshots
+          path: web/playground/screenshots
+          if-no-files-found: warn
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         if: failure()
         with:
@@ -193,6 +200,46 @@ jobs:
             web/playground/playwright-report
             web/playground/test-results
           if-no-files-found: ignore
+      # The build the journeys just served is the one Pages publishes.
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: settings-playground-site
+          path: web/playground/dist
+          if-no-files-found: error
+
+  deploy:
+    # Publish only from main, and only after the browser package checks and playground journeys pass.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [build, playground]
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: settings-browser-dist
+          path: site
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: settings-playground-site
+          path: site/playground
+      - name: Check the site layout
+        run: |
+          set -euo pipefail
+          for path in index.html reference-ui.js reference-settings.json pkg/settings_wasm_bg.wasm \
+            playground/index.html playground/playground-settings.json; do
+            test -f "site/$path" || { echo "missing site/$path"; exit 1; }
+          done
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5
 
   prepare:
     if: github.event_name == 'pull_request'

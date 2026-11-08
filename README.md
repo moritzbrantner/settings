@@ -99,6 +99,10 @@ bunx playwright test --workers=1     # browser journeys (starts serve:e2e)
 
 The independent XState contract in `web/playground/e2e/settings-machine.spec.ts` generates bounded Playwright paths for editing, staging, Apply, Cancel, and reset. It asserts the visible setting value and available actions after every transition without importing the application's transition logic. Run only those paths with `bunx playwright test --grep '@state:settings'` from `web/playground/`; they use the existing browser test server and CI gate.
 
+Each optional integration (3d-lab preview, physics, audio, input-bindings editor) renders inside an error boundary: when it throws, its section shows a named diagnostic with a retry button and the surrounding settings stay usable. `?fail-integration=graphics` (also `physics`, `audio`, `input-bindings`) simulates that failure. `e2e/screenshots.spec.ts` writes representative desktop and narrow screenshots to `web/playground/screenshots/`; CI uploads them as the `settings-playground-screenshots` artifact on every run and never compares pixels.
+
+After every push to `main` whose browser package checks and playground journeys pass, the `Browser distribution` workflow deploys GitHub Pages: the reference UI at <https://moritzbrantner.github.io/settings/> and the tested playground build at <https://moritzbrantner.github.io/settings/playground/>. Pages is a demo, not a dependency; consumers keep pinning `browser-dist` commits.
+
 ## Workspace
 
 ```text
