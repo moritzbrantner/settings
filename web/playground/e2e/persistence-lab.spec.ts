@@ -265,8 +265,11 @@ test('fixture presets and named profiles round-trip through storage', async ({ p
 });
 
 test('unconfirmed changes roll back on the fake clock; confirmed ones stay', async ({ page }) => {
-  await page.clock.install();
+  // The installed clock would otherwise follow real time; pause it so only runFor advances ticks.
+  const start = new Date('2026-01-01T00:00:00Z');
+  await page.clock.install({ time: start });
   await openPlayground(page);
+  await page.clock.pauseAt(new Date(start.getTime() + 60_000));
   const fov = definition('video.fov');
   const confirmButton = page.getByRole('button', { name: 'Apply with confirmation' });
   const alert = page.getByRole('alert');
