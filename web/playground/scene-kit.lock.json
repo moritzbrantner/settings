@@ -1,0 +1,19 @@
+{
+  "schema": "settings-playground-scene-kit-lock-v1",
+  "bundles": [
+    {
+      "id": "ranger",
+      "release": "humanoid-ranger-male-v9",
+      "asset": "humanoid.ranger.male.tar",
+      "sha256": "23ab09316b75d60014eda02824339a985e71d42f0e7974bd7f71a4c235f6101d",
+      "entries": [{ "key": "humanoid.ranger.male", "variant": "default" }]
+    },
+    {
+      "id": "nature",
+      "release": "greyhaven-nature",
+      "asset": "greyhaven.nature.tar",
+      "sha256": "c0d578faec0b1286ab243241fb69f764141f4c9e72c88ccd86326fa0b415f44e",
+      "entries": "all"
+    }
+  ]
+}

@@ -1,6 +1,8 @@
 // Graphics settings drive the 3d-lab preview (issue #23). Command translation is checked through
 // the preview's applied-config attributes, independently of pixels; screenshots are attached as
 // Low/High evidence only.
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { expect, test, type Page } from '@playwright/test';
 import {
   applyButton,
@@ -13,6 +15,7 @@ import {
   gotoSetting,
   openPlayground,
   primaryControl,
+  repoRoot,
   row,
   type Definition,
 } from './playground';
@@ -104,4 +107,77 @@ test('Low and High graphics evidence', async ({ page }, testInfo) => {
   await expect(preview(page)).toHaveAttribute('data-shadows', 'false');
   await expect(preview(page)).toHaveAttribute('data-renderer-ready', 'true');
   await testInfo.attach('graphics-low', { body: await preview(page).screenshot(), contentType: 'image/png' });
+});
+
+// Scene kit (issue #25): asset-tooling content from the pinned release tars, drawn by 3d-lab.
+const lock = JSON.parse(readFileSync(join(repoRoot, 'web', 'playground', 'scene-kit.lock.json'), 'utf8')) as {
+  bundles: Array<{ id: string; release: string; sha256: string }>;
+};
+const diagnostics = (page: Page) => page.getByTestId('scene-kit-diagnostics');
+
+async function openSceneKit(page: Page) {
+  await openGraphics(page);
+  await requireRenderer(page);
+  await expect(preview(page)).toHaveAttribute('data-scene-kit', 'ready', { timeout: 30_000 });
+  await diagnostics(page).locator('summary').click();
+}
+
+test('the preview draws the pinned scene kit and shows its provenance', async ({ page }) => {
+  await openSceneKit(page);
+  for (const bundle of lock.bundles) {
+    const bundleRow = diagnostics(page).locator(`[data-bundle="${bundle.id}"]`);
+    await expect(bundleRow).toContainText(bundle.release);
+    await expect(bundleRow).toContainText(bundle.sha256);
+    await expect(bundleRow).toContainText('verified');
+  }
+  // The Ranger is drawn as a real character; every nature member is either drawn or explained.
+  await expect(diagnostics(page).locator('[data-member="humanoid.ranger.male"]')).toHaveAttribute('data-variant', 'default');
+  const members = diagnostics(page).locator('[data-member^="greyhaven.nature."]');
+  await expect(members).not.toHaveCount(0);
+  for (const member of await members.all()) {
+    if ((await member.getAttribute('data-variant')) === 'proxy') await expect(member).toContainText('not drawn:');
+    else await expect(member).toContainText('drawn');
+  }
+  expect(await diagnostics(page).locator('[data-variant]:not([data-variant="proxy"])').count()).toBeGreaterThan(1);
+});
+
+test('object density is staged and draw distance culls placements at once', async ({ page }) => {
+  await openSceneKit(page);
+  await expect(preview(page)).toHaveAttribute('data-placed-instances', '27');
+
+  await gotoSetting(page, definition('video.object_density'));
+  await choiceControl(row(page, 'video.object_density'), definition('video.object_density')).selectOption('high');
+  await expect(preview(page)).toHaveAttribute('data-object-density', 'medium');
+  await applyButton(page).click();
+  await expect(preview(page)).toHaveAttribute('data-object-density', 'high');
+  await expect(preview(page)).toHaveAttribute('data-placed-instances', '53');
+  const far = Number(await preview(page).getAttribute('data-drawn-instances'));
+
+  await gotoSetting(page, definition('video.draw_distance'));
+  await enterText(exactField(row(page, 'video.draw_distance'), definition('video.draw_distance')), '20');
+  await expect(preview(page)).toHaveAttribute('data-draw-distance', '20');
+  const near = Number(await preview(page).getAttribute('data-drawn-instances'));
+  expect(near).toBeGreaterThan(0);
+  expect(near).toBeLessThan(far);
+});
+
+test('an unavailable asset variant falls back to the next variant or a proxy', async ({ page }) => {
+  // Every variant of one member is missing; the rest of the scene still loads.
+  await page.route('**/scene-kit/nature/scenes/greyhaven.nature.bush.1/**', (route) => route.fulfill({ status: 404 }));
+  await openSceneKit(page);
+  const bush = diagnostics(page).locator('[data-member="greyhaven.nature.bush.1"]');
+  await expect(bush).toHaveAttribute('data-variant', 'proxy');
+  await expect(bush).toContainText('HTTP 404');
+  await expect(diagnostics(page).locator('[data-member="humanoid.ranger.male"]')).toHaveAttribute('data-variant', 'default');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('a missing scene kit leaves a working preview with proxies', async ({ page }) => {
+  await page.route('**/scene-kit/scene-kit.json', (route) => route.fulfill({ status: 404 }));
+  await openGraphics(page);
+  await requireRenderer(page);
+  await expect(preview(page)).toHaveAttribute('data-scene-kit', 'unavailable');
+  await expect(preview(page)).toHaveAttribute('data-placed-instances', '27');
+  await diagnostics(page).locator('summary').click();
+  await expect(diagnostics(page)).toContainText('fetch:scene-kit');
 });

@@ -1,6 +1,7 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import { readFileSync } from 'node:fs';
+import { cpSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, type Plugin } from 'vite';
 
@@ -9,6 +10,40 @@ const fixture = fileURLToPath(
   new URL('../../fixtures/presentation/playground.json', import.meta.url),
 );
 const FIXTURE_NAME = 'playground-settings.json';
+const sceneKit = fileURLToPath(new URL('./.scene-kit/', import.meta.url));
+const SCENE_KIT_PREFIX = '/scene-kit/';
+const SCENE_KIT_TYPES: Record<string, string> = {
+  '.json': 'application/json',
+  '.gltf': 'model/gltf+json',
+  '.png': 'image/png',
+};
+
+/**
+ * Serve (dev) and copy (build) the fetched scene kit from `bun run fetch:scene-kit` unchanged as
+ * `scene-kit/`. When it was not fetched nothing is served and the preview shows its fallback.
+ */
+function playgroundSceneKit(): Plugin {
+  return {
+    name: 'settings-playground-scene-kit',
+    configureServer(server) {
+      server.middlewares.use((request, response, next) => {
+        const path = decodeURIComponent(request.url?.split('?')[0] ?? '');
+        const at = path.indexOf(SCENE_KIT_PREFIX);
+        if (at < 0) return next();
+        const relative = normalize(path.slice(at + SCENE_KIT_PREFIX.length));
+        const file = join(sceneKit, relative);
+        if (relative.startsWith('..') || !existsSync(file) || !statSync(file).isFile()) return next();
+        response.setHeader('content-type', SCENE_KIT_TYPES[extname(file)] ?? 'application/octet-stream');
+        response.end(readFileSync(file));
+      });
+    },
+    writeBundle(options) {
+      if (options.dir && existsSync(sceneKit)) {
+        cpSync(sceneKit, join(options.dir, 'scene-kit'), { recursive: true });
+      }
+    },
+  };
+}
 
 /** Serve and emit the shared playground fixture unchanged as `playground-settings.json`. */
 function playgroundFixture(): Plugin {
@@ -32,7 +67,7 @@ function playgroundFixture(): Plugin {
 
 export default defineConfig({
   base: './',
-  plugins: [react(), tailwindcss(), playgroundFixture()],
+  plugins: [react(), tailwindcss(), playgroundFixture(), playgroundSceneKit()],
   resolve: {
     alias: [
       {
