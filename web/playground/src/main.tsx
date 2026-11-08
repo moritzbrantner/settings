@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { createSettingsSession } from '@moritzbrantner/settings-browser';
 import { App } from './App';
+import { ErrorBoundary, PlaygroundFailure } from './IntegrationBoundary';
 import { detectRendererCapabilities } from './graphics';
 import { applyUrlOverlays, browserStorage, loadStoredScopes } from './lab';
 import type { PlaygroundFixture } from './model';
@@ -27,23 +28,20 @@ async function start(): Promise<void> {
     const urlProblems = applyUrlOverlays(session, definitions, window.location.search);
     root.render(
       <StrictMode>
-        <App
-          session={session}
-          fixture={fixture}
-          webgl={capabilities['renderer.webgl'] === true}
-          storage={storage}
-          startupResults={startupResults}
-          urlProblems={urlProblems}
-        />
+        <ErrorBoundary fallback={(error) => <PlaygroundFailure error={error} />}>
+          <App
+            session={session}
+            fixture={fixture}
+            webgl={capabilities['renderer.webgl'] === true}
+            storage={storage}
+            startupResults={startupResults}
+            urlProblems={urlProblems}
+          />
+        </ErrorBoundary>
       </StrictMode>,
     );
   } catch (error) {
-    root.render(
-      <main className="p-6">
-        <h1 className="text-2xl font-semibold">Settings Playground</h1>
-        <p role="alert">The playground could not start: {String(error)}</p>
-      </main>,
-    );
+    root.render(<PlaygroundFailure error={error} />);
   }
 }
 

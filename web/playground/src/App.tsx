@@ -16,6 +16,7 @@ import { audioMix, PREVIEWED_AUDIO, sampleRateOf } from './audio';
 import { AudioPreview } from './AudioPreview';
 import { ControlsBindings } from './ControlsBindings';
 import { GraphicsPreview } from './GraphicsPreview';
+import { IntegrationBoundary } from './IntegrationBoundary';
 import { rendererConfig } from './graphics';
 import { physicsConfig } from './physics';
 import { PhysicsPreview } from './PhysicsPreview';
@@ -463,17 +464,31 @@ export function App({
                   Reset {activeName} section
                 </Button>
               </div>
-              {activeCategory === GRAPHICS_CATEGORY && <GraphicsPreview config={graphics} webgl={webgl} />}
+              {activeCategory === GRAPHICS_CATEGORY && (
+                <IntegrationBoundary id="graphics" name="3d-lab preview">
+                  <GraphicsPreview config={graphics} webgl={webgl} />
+                </IntegrationBoundary>
+              )}
               {activeCategory === SIMULATION_CATEGORY && (
-                <PhysicsPreview config={physics} graphics={graphics} webgl={webgl} />
+                <IntegrationBoundary id="physics" name="Physics preview">
+                  <PhysicsPreview config={physics} graphics={graphics} webgl={webgl} />
+                </IntegrationBoundary>
               )}
               {activeCategory === AUDIO_CATEGORY && (
-                <AudioPreview mix={mix} sampleRate={sampleRateOf(launchValues)} />
+                <IntegrationBoundary id="audio" name="Audio preview">
+                  <AudioPreview mix={mix} sampleRate={sampleRateOf(launchValues)} />
+                </IntegrationBoundary>
               )}
               {(fixture.input_bindings_surfaces ?? [])
                 .filter((surface) => surface.category_key === activeCategory)
                 .map((surface) => (
-                  <ControlsBindings key={surface.descriptor.surface_id} surfaceId={surface.descriptor.surface_id} />
+                  <IntegrationBoundary
+                    key={surface.descriptor.surface_id}
+                    id="input-bindings"
+                    name="Input-bindings editor"
+                  >
+                    <ControlsBindings surfaceId={surface.descriptor.surface_id} />
+                  </IntegrationBoundary>
                 ))}
               <CategoryRows entries={visible} localize={localize} renderRow={renderRow} />
             </section>
