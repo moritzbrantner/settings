@@ -5,3 +5,4 @@ test-results/
 playwright-report/
 .scene-kit/
 .scene-kit-cache/
+screenshots/
