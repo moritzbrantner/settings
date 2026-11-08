@@ -10,6 +10,11 @@
 //! `reset_all`) change the committed state and mirror into the staged state, so consumers that
 //! never stage observe exactly the previous single-state behavior. Staged writes change only the
 //! staged state until `apply_staged_json` commits it or `cancel_staged_json` discards it.
+//!
+//! Presets and transient overlays (policy, command line, session) follow the same rule: direct
+//! calls change both states, `stage_preset_json` only the staged one. Overlays never reach an
+//! exported snapshot and survive imports and resets. `apply_staged_with_confirmation_json` wraps
+//! a commit in the core timed safety rollback; ticks are caller-supplied, never a clock.
 
 mod session;
 
@@ -131,8 +136,83 @@ impl SettingsSession {
             .map_err(js_error)
     }
 
+    /// Replace one persistent scope and return a structured load report (loaded, preserved
+    /// unknown and rejected entries with reasons, migrations). Overlays survive the import.
+    pub fn import_scope_report_json(
+        &mut self,
+        raw_scope: &str,
+        json: &str,
+    ) -> Result<String, JsValue> {
+        self.core
+            .import_scope_report_json(raw_scope, json)
+            .map_err(js_error)
+    }
+
+    /// Export one persistent scope as a canonical delta-only snapshot.
     pub fn export_scope_json(&self, raw_scope: &str) -> Result<String, JsValue> {
         self.core.export_scope_json(raw_scope).map_err(js_error)
+    }
+
+    /// Apply a preset directly with `Preset` provenance; returns the committed value changes.
+    pub fn set_preset_json(&mut self, preset_json: &str) -> Result<String, JsValue> {
+        self.core.set_preset_json(preset_json).map_err(js_error)
+    }
+
+    /// Stage a preset with `Preset` provenance; returns the staged value changes.
+    pub fn stage_preset_json(&mut self, preset_json: &str) -> Result<String, JsValue> {
+        self.core.stage_preset_json(preset_json).map_err(js_error)
+    }
+
+    /// Set one `policy`, `command_line` or `session` overlay above the durable preference.
+    pub fn set_overlay_json(
+        &mut self,
+        raw_layer: &str,
+        raw_id: &str,
+        value_json: &str,
+    ) -> Result<(), JsValue> {
+        self.core
+            .set_overlay_json(raw_layer, raw_id, value_json)
+            .map_err(js_error)
+    }
+
+    /// Remove one overlay; returns whether it existed.
+    pub fn clear_overlay(&mut self, raw_layer: &str, raw_id: &str) -> Result<bool, JsValue> {
+        self.core.clear_overlay(raw_layer, raw_id).map_err(js_error)
+    }
+
+    /// Remove every overlay of one layer.
+    pub fn clear_overlays(&mut self, raw_layer: &str) -> Result<(), JsValue> {
+        self.core.clear_overlays(raw_layer).map_err(js_error)
+    }
+
+    /// Commit the staged state, keeping a rollback until confirmed before `deadline_tick`.
+    pub fn apply_staged_with_confirmation_json(
+        &mut self,
+        deadline_tick: f64,
+    ) -> Result<String, JsValue> {
+        self.core
+            .apply_staged_with_confirmation_json(deadline_tick)
+            .map_err(js_error)
+    }
+
+    /// `none`, `pending` or `expired` at the caller-supplied tick.
+    pub fn confirmation_status(&self, now_tick: f64) -> Result<String, JsValue> {
+        self.core.confirmation_status(now_tick).map_err(js_error)
+    }
+
+    /// Keep the applied state; succeeds only while the confirmation is pending.
+    pub fn confirm_applied(&mut self, now_tick: f64) -> Result<bool, JsValue> {
+        self.core.confirm_applied(now_tick).map_err(js_error)
+    }
+
+    /// Roll back to the pre-apply state if the confirmation expired at `now_tick`.
+    pub fn roll_back_expired_json(&mut self, now_tick: f64) -> Result<String, JsValue> {
+        self.core.roll_back_expired_json(now_tick).map_err(js_error)
+    }
+
+    /// Roll back to the pre-apply state now.
+    pub fn revert_applied_json(&mut self) -> Result<String, JsValue> {
+        self.core.revert_applied_json().map_err(js_error)
     }
 }
 
