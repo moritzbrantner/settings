@@ -19,8 +19,8 @@
     "@dimforge/rapier3d-compat": "0.21.0",
     "@moritzbrantner/input-bindings": "github:moritzbrantner/input-bindings#5e4f5fcb3e5aa70ad6131a2e9d2f902462092347",
     "@moritzbrantner/input-bindings-react": "github:moritzbrantner/input-bindings#3082a0b30ff57b428336e0fda9d1b584dc6ee9e8",
-    "@moritzbrantner/three-d-renderer": "github:moritzbrantner/3d-lab#30dc4371666a8c20ae623c6925a39d6a86b7ab2b",
-    "@moritzbrantner/ui": "git+https://github.com/moritzbrantner/ui.git#2f0cc4e470307b017fb06aae4a03b9abce47cc8c",
+    "@moritzbrantner/three-d-renderer": "github:moritzbrantner/3d-lab#8d962726e9224a8b2ef86eb437db3b52cd7da031",
+    "@moritzbrantner/ui": "git+https://github.com/moritzbrantner/ui.git#2ea30631e0928bbdf41123e0f9abb89865f8e033",
     "react": "19.3.1",
     "react-dom": "19.3.1"
   },
