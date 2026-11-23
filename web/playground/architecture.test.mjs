@@ -78,15 +78,16 @@ test('playground UI uses @moritzbrantner/ui primitives', async () => {
   );
 });
 
-test('@moritzbrantner/ui is a commit-pinned git dependency', async () => {
+// Owner decision moenarch-games/mmorpg#1126: siblings follow main, bun.lock fixes the commit.
+test('@moritzbrantner/ui is a git dependency on main', async () => {
   const manifestPath = join(playgroundDir, 'package.json');
   assert.ok(existsSync(manifestPath), 'web/playground/package.json must exist');
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
   const spec = manifest.dependencies?.['@moritzbrantner/ui'] ?? manifest.devDependencies?.['@moritzbrantner/ui'];
   assert.match(
     spec ?? '',
-    /^(?:git\+https:\/\/github\.com\/moritzbrantner\/ui(?:\.git)?|github:moritzbrantner\/ui)#[0-9a-f]{40}$/,
-    '@moritzbrantner/ui must be pinned to an exact git commit',
+    /^(?:git\+https:\/\/github\.com\/moritzbrantner\/ui(?:\.git)?|github:moritzbrantner\/ui)#main$/,
+    '@moritzbrantner/ui must follow the ui main branch',
   );
 });
 
